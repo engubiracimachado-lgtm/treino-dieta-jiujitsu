@@ -21,6 +21,7 @@
     var criar = modo === "criar", recup = modo === "recuperar", nova = modo === "nova";
     tela.innerHTML =
       '<form class="login-box" id="login-form" novalidate>' +
+      '<img class="login-logo" src="icons/logo.png" alt="Logo do app" width="72" height="72">' +
       '<p class="eyebrow">Treino, Dieta e Jiujitsu</p>' +
       '<h2>' + (criar ? "Criar conta" : recup ? "Recuperar senha" : nova ? "Nova senha" : "Entrar") + '</h2>' +
       (nova ? "" : '<label class="f"><span>E-mail</span><input type="email" id="login-email" autocomplete="email" required></label>') +

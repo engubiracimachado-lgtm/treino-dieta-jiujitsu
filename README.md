@@ -20,4 +20,4 @@ App pessoal (PWA instalável) para planejar e registrar treinos de musculação,
 
 - `node tools/serve.js` sobe o app em http://localhost:5173.
 - `node tools/build.js ../diario-de-treino.html` regenera `index.html` a partir da versão do artifact.
-- `node tools/icons.js` regenera os ícones.
+- `powershell -File tools/logo.ps1 -Origem assets/logo-original.webp` regenera os ícones a partir do logo.

@@ -24,15 +24,18 @@ rep(`'<button class="area" data-act="area" data-a="jiu">`, `'<button class="area
 rep(`</span></button></div>'+renderSono();`, `</span></button></div>'+renderSono()+'<div class="acts"><span class="hint">Conectado como '+esc(window.__email||"")+'</span><button class="btn ghost sm" data-act="sair">Sair da conta</button></div>';`);
 rep('  if(a.indexOf("d-")===0){dClick(a,b);return}', '  if(a==="sair"){if(window.__sair)window.__sair();return}\n  if(a.indexOf("d-")===0){dClick(a,b);return}');
 
+// logo no cabeçalho
+rep('<div class="marca"><button class="btn sm" id="voltar"', '<div class="marca"><img class="marca-logo" src="icons/logo.png" alt="" width="32" height="32"><button class="btn sm" id="voltar"');
+
 // tela de login
-rep('.hint{font-size:14px', '.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}\n.login-box{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px 20px;display:flex;flex-direction:column;gap:14px}\n.login-box h2{font-family:var(--display);font-weight:700;font-size:34px;text-transform:uppercase;margin:0;line-height:1}\ninput[type=email],input[type=password]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:16px}\n.hint{font-size:14px');
+rep('.hint{font-size:14px', '.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}\n.login-box{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px 20px;display:flex;flex-direction:column;gap:14px}\n.marca-logo{width:32px;height:32px;border-radius:7px;flex:none}\n.login-logo{width:72px;height:72px;border-radius:16px;align-self:center}\n.login-box h2{font-family:var(--display);font-weight:700;font-size:34px;text-transform:uppercase;margin:0;line-height:1}\ninput[type=email],input[type=password]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:16px}\n.hint{font-size:14px');
 
 const head = `<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1f4fd0">
+<meta name="theme-color" content="#111111">
 <meta name="description" content="Treino, dieta e jiujitsu: planejamento da semana, registro diário, histórico, sono e coach.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
