@@ -75,3 +75,13 @@
 .chave[aria-checked="true"] i::after{transform:translateX(18px);background:#fff}
 @media (max-width:720px){.cfg{grid-template-columns:1fr}.cfg-nav{flex-direction:row;overflow-x:auto}.cfg-linha{grid-template-columns:1fr;gap:8px}.cfg-campo.dois{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.chave i,.chave i::after{transition:none}}
+
+.cfg-ponto{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-left:auto;flex:none}
+.cfg-sobre .head{display:none}
+.cfg-sobre{display:flex;flex-direction:column;gap:14px}
+.aviso-perfil{border-color:var(--accent);background:var(--accent-soft)}
+.aviso-perfil h3{margin:0;font-family:var(--display);font-size:26px;text-transform:uppercase;line-height:1}
+.notif-ctl{flex-direction:row;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.notif-hora{width:130px}
+.notif-hora input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink)}
+.notif-hora input:disabled{opacity:.5}

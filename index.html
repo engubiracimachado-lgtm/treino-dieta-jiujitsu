@@ -239,13 +239,11 @@ section{display:flex;flex-direction:column;gap:10px}
       <button role="tab" data-act="tab" data-t="hoje">Treino</button>
       <button role="tab" data-act="tab" data-t="plano">Plano</button>
       <button role="tab" data-act="tab" data-t="hist">Histórico</button>
-      <button role="tab" data-act="tab" data-t="perfil">Perfil</button>
     </nav>
     <nav class="tabs" role="tablist" id="dtabs" hidden>
       <button role="tab" data-act="d-tab" data-t="dia">Diário</button>
       <button role="tab" data-act="d-tab" data-t="plano">Plano</button>
       <button role="tab" data-act="d-tab" data-t="hist">Histórico</button>
-      <button role="tab" data-act="d-tab" data-t="perfil">Perfil</button>
     </nav>
     <nav class="tabs" role="tablist" id="jtabs" hidden>
       <button role="tab" data-act="j-tab" data-t="home">Home</button>
@@ -608,7 +606,7 @@ function renderCoach(s){
     return h+'<p class="hint">'+(coachOff?"O coach não está disponível nesta conta ou nesta visualização.":"O coach não está disponível agora. Verifique a conexão e entre de novo.")+'</p></div></div>';
   }
   var chat=s.chat||[];
-  h+='<p class="hint">Tire dúvidas durante o treino. O coach lê o treino de hoje, o planejamento da semana, o seu histórico e o que você escreveu na aba Perfil.</p></div>';
+  h+='<p class="hint">Tire dúvidas durante o treino. O coach lê o treino de hoje, o planejamento da semana, o seu histórico e o que você escreveu em Configurações → Sobre você.</p></div>';
   if(chat.length||coachBusy){
     h+='<div class="chat">'+chat.map(function(m){return'<div class="msg '+(m.r==="u"?"u":"a")+'">'+esc(m.t)+'</div>'}).join("");
     if(coachBusy)h+='<div class="msg a" id="coach-live">'+esc(coachLive||"Pensando…")+'</div>';
@@ -617,7 +615,7 @@ function renderCoach(s){
   if(coachErr)h+='<p class="hint" style="color:var(--bad)">'+esc(coachErr)+'</p>';
   h+='<label class="f"><span>Sua pergunta</span><textarea class="mini" id="coach-in" data-coach="1" placeholder="ex.: o Zercher ficou pesado na 3ª série, mantenho os 40 na última?">'+esc(coachDraft)+'</textarea></label>';
   h+='<div class="acts">'+(coachBusy?'<button class="btn" data-act="coachstop">Parar resposta</button>':'<button class="btn pri" data-act="coach">Enviar</button>')+
-    '<button class="btn ghost sm" data-act="tab" data-t="perfil">'+(perfilTem()?"Ver o que o coach sabe de você":"Preencher seu perfil para o coach")+'</button>'+(chat.length&&!coachBusy?'<button class="btn ghost sm" data-act="coachclr">Limpar conversa</button>':"")+'</div>';
+    '<button class="btn ghost sm" data-c="conta" data-aba="sobre">'+(perfilTem()?"Ver o que o coach sabe de você":"Preencher seu perfil para o coach")+'</button>'+(chat.length&&!coachBusy?'<button class="btn ghost sm" data-act="coachclr">Limpar conversa</button>':"")+'</div>';
   if(!chat.length)h+='<p class="hint">As respostas são geradas pelo Claude, pela API da Anthropic, cobrada por uso.</p>';
   return h+'</div>';
 }
@@ -630,7 +628,7 @@ function coachContexto(date){
   var s=view(date),L=[];
   L.push("HOJE: "+longDate(hoje)+". TREINO ABERTO NA TELA: "+longDate(date)+".");
   var pt=perfil.texto.trim().slice(0,20000);
-  L.push("\nPERFIL DO USUÁRIO (escrito por ele na aba Perfil):\n"+(pt||"(nada preenchido; não há dados de dieta, objetivo, saúde ou rotina)"));
+  L.push("\nPERFIL DO USUÁRIO (escrito por ele em Configurações → Sobre você):\n"+(pt||"(nada preenchido; não há dados de dieta, objetivo, saúde ou rotina)"));
   L.push("\nTREINO DO DIA: "+(s.nome||"Treino")+(s.obs?"\nObservações do treino: "+s.obs:"")+"\n"+s.ex.map(exLinha).join("\n")+"\nTempo: "+(s.inicio?"cronômetro rodando":s.min!=null?s.min+" min":"não registrado")+" | Esforço geral: "+(s.esforco?s.esforco+"/10":"não marcado")+(s.notas?" | Anotações: "+s.notas:""));
   var sk=Object.keys(sono).filter(function(k){return sonoMin(sono[k])!=null||sono[k].nota}).sort().slice(-14);
   if(sk.length)L.push("\nSONO (data em que acordou: dormiu–acordou, horas, nota de 1 a 5):\n"+sk.map(function(k){var x=sono[k];return k+": "+(x.dormiu||"?")+"–"+(x.acordou||"?")+", "+hTxt(sonoMin(x))+(x.nota?", nota "+x.nota:"")}).join("\n"));
@@ -1042,7 +1040,7 @@ function renderHome(){
   var s=view(hoje),st=s.ex.length?(s.nome||"Treino")+(s.concluido?" · concluído":tocado(s)?" · em andamento":""):(semanas[monday(hoje)]?"Descanso":"Semana sem planejamento");
   var dd=dView(hoje),dt=dDiaTot(dd),dHoje=dd.refs.length||dt.reg?"~"+nTxt(dt.kcal)+" kcal"+(dd.metaKcal?" de "+nTxt(dd.metaKcal):"")+" · "+nTxt(dt.prot)+" g de proteína":(dsem[monday(hoje)]?"Sem refeições planejadas":"Semana sem plano");
   var js=jStats(jLista()),jHome=js.n?js.n+(js.n>1?" treinos":" treino")+" · "+horasTxt(js.min)+" de tatame":"Nenhum treino registrado";
-  return'<div class="head"><p class="eyebrow">'+esc(longDate(hoje))+'</p><h2>O que vamos ver?</h2></div>'+
+  return'<div class="head"><p class="eyebrow">'+esc(longDate(hoje))+'</p><h2>O que vamos ver?</h2></div>'+(window.__tdjPerfilVazio?'<div class="panel aviso-perfil"><div class="blk"><p class="eyebrow">Primeiro passo</p><h3>Conte sobre você</h3><p class="hint">Objetivo, dados físicos, dieta, saúde, rotina e treinos anteriores. É o que o coach lê antes de responder, nos treinos e na dieta. Leva poucos minutos e dá para colar o resumo de uma conversa com o Claude.</p></div><div class="acts"><button class="btn pri" data-c="conta" data-aba="sobre">Preencher meu perfil</button></div></div>':'')+
     '<div class="areas"><button class="area" data-act="area" data-a="treino"><span class="area-t">Treino</span><span class="area-s">Planejamento da semana, treino do dia, histórico e coach</span><span class="area-h"><b>Hoje</b>'+esc(st)+'</span></button>'+
     '<button class="area" data-act="area" data-a="dieta"><span class="area-t">Dieta</span><span class="area-s">Plano alimentar da semana, diário, histórico e coach com fotos</span><span class="area-h"><b>Hoje</b>'+esc(dHoje)+'</span></button>'+
     '<button class="area" data-act="area" data-a="jiu"><span class="area-t">Jiujitsu</span><span class="area-s">Treinos de tatame, técnicas, rolas, estudo e anotações</span><span class="area-h"><b>Total</b>'+esc(jHome)+'</span></button></div>'+renderSono()+'<div class="acts"><span class="hint">Conectado como '+esc(window.__email||"")+'</span><button class="btn ghost sm" data-act="sair">Sair da conta</button></div>';
@@ -1252,7 +1250,7 @@ function dRefLinha(r){
 function dContexto(date){
   var d=dView(date),t=dDiaTot(d),L=[];
   L.push("HOJE: "+longDate(hoje)+". DIA ABERTO NA TELA: "+longDate(date)+".");
-  L.push("\nPERFIL DO USUÁRIO (escrito por ele na aba Perfil):\n"+(perfil.texto.trim().slice(0,20000)||"(nada preenchido)"));
+  L.push("\nPERFIL DO USUÁRIO (escrito por ele em Configurações → Sobre você):\n"+(perfil.texto.trim().slice(0,20000)||"(nada preenchido)"));
   var w=dsem[monday(date)];
   if(w)L.push("\nPLANO ALIMENTAR DA SEMANA:\n"+DIAS.map(function(x){var p=w.dias[x.k];return x.n+(p.metaKcal||p.metaProt?" (meta "+dRefTxt(p.metaKcal,p.metaProt)+")":"")+":\n"+(p.refs.length?p.refs.map(function(r){return"  - "+(r.hora?r.hora+" ":"")+r.nome+(r.opc?" (opcional)":"")+" | "+dRefTxt(r.kcal,r.prot)+" | "+r.itens.replace(/\n/g,"; ")+(r.nota?" | orientação: "+r.nota.replace(/\n/g," "):"")}).join("\n"):"  (sem refeições)")}).join("\n"));
   else L.push("\nPLANO ALIMENTAR DA SEMANA: nenhum plano salvo para esta semana.");
@@ -1784,7 +1782,7 @@ setInterval(function(){
 window.addEventListener("pagehide",function(){if(mode==="local"&&dirty.size){dirty.clear();saveLocal()}});
 
 render();
-window.__tdjApp={estado:function(){return{area:area}},dados:function(){return{plano:plano,semanas:semanas,sessoes:sessoes,sono:sono,dsem:dsem,ddias:ddias,jtreinos:jtreinos,jnotas:jnotas,jaulas:jaulas}},ir:function(o){if(o.area)area=o.area;if(o.tab)tab=o.tab;if(o.sel)sel=o.sel;if(o.dtab)dtab=o.dtab;if(o.dsel)dsel=o.dsel;if(o.jtab)jtab=o.jtab;if("jsel" in o)jsel=o.jsel;if("jnsel" in o)jnsel=o.jnsel;if("jasel" in o)jasel=o.jasel;if(o.pw){pw=o.pw;editW=null}if(o.dpw){dpw=o.dpw;deditW=null}window.scrollTo(0,0);render()},render:function(){render()}};
+window.__tdjApp={estado:function(){return{area:area}},perfilHtml:function(){return renderPerfil()},dados:function(){return{plano:plano,semanas:semanas,sessoes:sessoes,sono:sono,dsem:dsem,ddias:ddias,jtreinos:jtreinos,jnotas:jnotas,jaulas:jaulas}},ir:function(o){if(o.area)area=o.area;if(o.tab)tab=o.tab;if(o.sel)sel=o.sel;if(o.dtab)dtab=o.dtab;if(o.dsel)dsel=o.dsel;if(o.jtab)jtab=o.jtab;if("jsel" in o)jsel=o.jsel;if("jnsel" in o)jnsel=o.jnsel;if("jasel" in o)jasel=o.jasel;if(o.pw){pw=o.pw;editW=null}if(o.dpw){dpw=o.dpw;deditW=null}window.scrollTo(0,0);render()},render:function(){render()}};
 if(window.claude&&window.claude.use)window.claude.use("sample").then(function(fn){if(fn){sampleFn=fn;maybeRender();try{fn.limits().then(function(l){dFotoOk=!!(l&&l.images);maybeRender()},function(){})}catch(e){}}},function(){});
 var boot=window.claude&&window.claude.use?window.claude.use("db"):Promise.resolve(null);
 boot.then(function(d){if(d)startDb(d);else{mode="local";flushAll()}},function(){mode="local";flushAll()});

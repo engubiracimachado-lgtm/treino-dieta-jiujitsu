@@ -27,6 +27,14 @@ rep('  if(a.indexOf("d-")===0){dClick(a,b);return}', '  if(a==="sair"){if(window
 // nome comercial: TDJ
 rep('<h1 id="marca">Treino, Dieta e Jiujitsu</h1>', '<h1 id="marca">TDJ</h1>');
 rep('area==="jiu"?"Jiujitsu":"Treino, Dieta e Jiujitsu"', 'area==="jiu"?"Jiujitsu":area==="conta"?"Configurações":"TDJ"');
+// "Sobre você" sai das abas de Treino e Dieta e vai para Configurações pessoais (conta.js)
+rep('\n      <button role="tab" data-act="tab" data-t="perfil">Perfil</button>', '');
+rep('\n      <button role="tab" data-act="d-tab" data-t="perfil">Perfil</button>', '');
+rep('class="btn ghost sm" data-act="tab" data-t="perfil">', 'class="btn ghost sm" data-c="conta" data-aba="sobre">');
+todos('(escrito por ele na aba Perfil)', '(escrito por ele em Configurações → Sobre você)');
+rep('o seu histórico e o que você escreveu na aba Perfil.', 'o seu histórico e o que você escreveu em Configurações → Sobre você.');
+rep(`<h2>O que vamos ver?</h2></div>'+`, `<h2>O que vamos ver?</h2></div>'+(window.__tdjPerfilVazio?'<div class="panel aviso-perfil"><div class="blk"><p class="eyebrow">Primeiro passo</p><h3>Conte sobre você</h3><p class="hint">Objetivo, dados físicos, dieta, saúde, rotina e treinos anteriores. É o que o coach lê antes de responder, nos treinos e na dieta. Leva poucos minutos e dá para colar o resumo de uma conversa com o Claude.</p></div><div class="acts"><button class="btn pri" data-c="conta" data-aba="sobre">Preencher meu perfil</button></div></div>':'')+`);
+
 // navegação: barra lateral no computador e barra inferior no celular (layout.css)
 var IC_NAV = {
   home: '<svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>',
@@ -42,7 +50,7 @@ rep('<main id="app"></main>', '<main id="app"></main>\n  <aside class="lateral" 
 // configurações pessoais e topo (conta.js): a área "conta" e os ganchos de dados e navegação
 rep('app.innerHTML=area==="dieta"?renderDietaArea():area==="jiu"?renderJiuArea():renderHome();setStatus();return}', 'app.innerHTML=area==="dieta"?renderDietaArea():area==="jiu"?renderJiuArea():area==="conta"&&window.__tdjConta?window.__tdjConta.html():renderHome();setStatus();return}');
 rep('function render(){\n  needsRender=false;', 'function render(){\n  needsRender=false;\n  if(window.__tdjConta)setTimeout(window.__tdjConta.depois,0);');
-rep('if(window.claude&&window.claude.use)window.claude.use("sample")', 'window.__tdjApp={estado:function(){return{area:area}},dados:function(){return{plano:plano,semanas:semanas,sessoes:sessoes,sono:sono,dsem:dsem,ddias:ddias,jtreinos:jtreinos,jnotas:jnotas,jaulas:jaulas}},ir:function(o){if(o.area)area=o.area;if(o.tab)tab=o.tab;if(o.sel)sel=o.sel;if(o.dtab)dtab=o.dtab;if(o.dsel)dsel=o.dsel;if(o.jtab)jtab=o.jtab;if("jsel" in o)jsel=o.jsel;if("jnsel" in o)jnsel=o.jnsel;if("jasel" in o)jasel=o.jasel;if(o.pw){pw=o.pw;editW=null}if(o.dpw){dpw=o.dpw;deditW=null}window.scrollTo(0,0);render()},render:function(){render()}};\nif(window.claude&&window.claude.use)window.claude.use("sample")');
+rep('if(window.claude&&window.claude.use)window.claude.use("sample")', 'window.__tdjApp={estado:function(){return{area:area}},perfilHtml:function(){return renderPerfil()},dados:function(){return{plano:plano,semanas:semanas,sessoes:sessoes,sono:sono,dsem:dsem,ddias:ddias,jtreinos:jtreinos,jnotas:jnotas,jaulas:jaulas}},ir:function(o){if(o.area)area=o.area;if(o.tab)tab=o.tab;if(o.sel)sel=o.sel;if(o.dtab)dtab=o.dtab;if(o.dsel)dsel=o.dsel;if(o.jtab)jtab=o.jtab;if("jsel" in o)jsel=o.jsel;if("jnsel" in o)jnsel=o.jnsel;if("jasel" in o)jasel=o.jasel;if(o.pw){pw=o.pw;editW=null}if(o.dpw){dpw=o.dpw;deditW=null}window.scrollTo(0,0);render()},render:function(){render()}};\nif(window.claude&&window.claude.use)window.claude.use("sample")');
 
 // botão de modo claro/escuro no cabeçalho
 rep('<div class="status" id="status" role="status"><i></i><span>Conectando…</span></div>', '<div class="brand-dir"><div class="status" id="status" role="status"><i></i><span>Conectando…</span></div><div class="topo-conta" id="topo-conta" hidden></div></div>');

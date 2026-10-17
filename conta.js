@@ -9,6 +9,7 @@
     pessoa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     chave: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.3-9.3M17 6l3 3M15 8l2 2"/></svg>',
     escudo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>',
+    doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>',
     salvar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7M8 21v-7h8v7"/></svg>'
   };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -18,7 +19,8 @@
   function segunda(s) { var p = s.split("-"), d = new Date(+p[0], +p[1] - 1, +p[2]); return addDias(s, -((d.getDay() + 6) % 7)); }
   function dataCurta(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" }).replace(/\./g, ""); }
 
-  var sb = null, user = null, db = null, prefs = { notif: {}, lidas: {} }, online = navigator.onLine;
+  var perfilTexto = "", perfilCarregado = false;
+  var sb = null, user = null, db = null, prefs = { notif: {}, lidas: {}, horas: {} }, online = navigator.onLine;
   var aba = "perfil", rasc = null, senhaAberta = false, senhaMsg = null, mfa = { carregado: false, ativo: null, novo: null, msg: null, desativar: false }, salvarMsg = null;
 
   /* ---------------- quem está logado ---------------- */
@@ -34,35 +36,45 @@
 
   /* ---------------- notificações (lembretes do dia) ---------------- */
   var TIPOS = [
-    ["sono", "Registro do sono", "Lembra de lançar a noite de sono, a partir das 5h."],
-    ["peso", "Pesagem em jejum", "Às segundas, quartas e sextas, se o peso do dia ainda não foi registrado."],
-    ["treino", "Treino do dia", "Quando há treino planejado para hoje e ele ainda não foi concluído."],
-    ["dieta", "Dieta do dia", "A partir do meio-dia, enquanto o dia da dieta não for concluído."],
-    ["jiu", "Treino de jiujitsu", "De segunda a sábado, depois das 21h, se nenhum treino de jiujitsu foi lançado no dia."],
-    ["plano", "Planejamento da próxima semana", "De sexta a domingo, se a próxima semana de treino ou de dieta ainda não foi salva."]
+    ["perfil", "Preencher o perfil", "Enquanto o texto de “Sobre você” estiver vazio, para o coach conhecer você.", ""],
+    ["sono", "Registro do sono", "Se a noite de sono ainda não foi lançada.", "07:00"],
+    ["peso", "Pesagem em jejum", "Às segundas, quartas e sextas, se o peso do dia ainda não foi registrado.", "07:00"],
+    ["treino", "Treino do dia", "Quando há treino planejado para hoje e ele ainda não foi concluído.", "11:00"],
+    ["dieta", "Dieta do dia", "Enquanto o dia da dieta não for concluído.", "12:00"],
+    ["jiu", "Treino de jiujitsu", "De segunda a sábado, se nenhum treino de jiujitsu foi lançado no dia.", "21:00"],
+    ["plano", "Planejamento da próxima semana", "De sexta a domingo, se a próxima semana de treino ou de dieta ainda não foi salva.", "09:00"]
   ];
   function ligado(t) { return prefs.notif[t] !== false; }
+  function horaPadrao(t) { var x = TIPOS.filter(function (y) { return y[0] === t; })[0]; return x ? x[3] : ""; }
+  function horaDe(t) { var v = prefs.horas && prefs.horas[t]; return /^\d{2}:\d{2}$/.test(v || "") ? v : horaPadrao(t); }
+  /* O lembrete só aparece depois do horário escolhido pela pessoa. */
+  function passou(t) {
+    var hh = horaDe(t); if (!hh) return true;
+    var a = new Date(), p = hh.split(":");
+    return a.getHours() * 60 + a.getMinutes() >= (+p[0]) * 60 + (+p[1]);
+  }
   function lembretes() {
     var A = window.__tdjApp; if (!A) return [];
     var D = A.dados(), h = hojeISO(), agora = new Date(), hr = agora.getHours(), dw = agora.getDay(), L = [];
-    if (ligado("sono") && hr >= 5) { var n = D.sono[h]; if (!n || !n.dormiu || !n.acordou) L.push({ k: "sono|" + h, t: "Registrar a noite de sono", s: "Horários e nota de hoje ainda estão em branco.", ir: { area: "home" } }); }
-    if (ligado("peso") && (dw === 1 || dw === 3 || dw === 5)) { var dd = D.ddias[h]; if (!dd || dd.peso == null) L.push({ k: "peso|" + h, t: "Pesagem em jejum", s: "Dia de pesagem: registre o peso no Diário da dieta.", ir: { area: "dieta", dtab: "dia", dsel: h } }); }
-    if (ligado("treino")) {
+    if (ligado("perfil") && perfilCarregado && !perfilTexto.trim()) L.push({ k: "perfil|" + h, t: "Preencha o seu perfil", s: "Conte objetivo, dieta, saúde, rotina e treinos anteriores para o coach.", ir: { area: "conta" }, aba: "sobre" });
+    if (ligado("sono") && passou("sono")) { var n = D.sono[h]; if (!n || !n.dormiu || !n.acordou) L.push({ k: "sono|" + h, t: "Registrar a noite de sono", s: "Horários e nota de hoje ainda estão em branco.", ir: { area: "home" } }); }
+    if (ligado("peso") && passou("peso") && (dw === 1 || dw === 3 || dw === 5)) { var dd = D.ddias[h]; if (!dd || dd.peso == null) L.push({ k: "peso|" + h, t: "Pesagem em jejum", s: "Dia de pesagem: registre o peso no Diário da dieta.", ir: { area: "dieta", dtab: "dia", dsel: h } }); }
+    if (ligado("treino") && passou("treino")) {
       var w = D.semanas[segunda(h)], k = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"][dw], pd = w && w.dias && w.dias[k], s = D.sessoes[h];
       if (pd && pd.ex && pd.ex.some(function (e) { return (e.nome || "").trim(); }) && !(s && s.concluido)) L.push({ k: "treino|" + h, t: "Treino de hoje: " + (pd.nome || "Treino"), s: s ? "Em andamento; falta concluir." : "Ainda não começou.", ir: { area: "treino", tab: "hoje", sel: h } });
     }
-    if (ligado("dieta") && hr >= 12) {
+    if (ligado("dieta") && passou("dieta")) {
       var x = D.ddias[h], dw2 = D.dsem[segunda(h)], kk = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"][dw], pl = dw2 && dw2.dias && dw2.dias[kk];
       if ((pl && pl.refs && pl.refs.length) && !(x && x.concluido)) {
         var reg = x ? x.refs.filter(function (r) { return r.kcal != null; }).length : 0, tot = x ? x.refs.filter(function (r) { return !r.opc; }).length : pl.refs.filter(function (r) { return !r.opc; }).length;
         L.push({ k: "dieta|" + h, t: "Dieta de hoje", s: reg + " de " + tot + " refeições registradas. Conclua o dia para receber o feedback.", ir: { area: "dieta", dtab: "dia", dsel: h } });
       }
     }
-    if (ligado("jiu") && dw >= 1 && dw <= 6 && hr >= 21) {
+    if (ligado("jiu") && passou("jiu") && dw >= 1 && dw <= 6) {
       var tem = Object.keys(D.jtreinos).some(function (id) { return D.jtreinos[id].data === h; });
       if (!tem) L.push({ k: "jiu|" + h, t: "Treino de jiujitsu de hoje", s: "Registre tipo, técnicas e rolas enquanto está fresco.", ir: { area: "jiu", jtab: "treinos", jsel: null } });
     }
-    if (ligado("plano") && (dw === 5 || dw === 6 || dw === 0)) {
+    if (ligado("plano") && passou("plano") && (dw === 5 || dw === 6 || dw === 0)) {
       var prox = addDias(segunda(h), 7);
       if (!D.semanas[prox]) L.push({ k: "plano-treino|" + prox, t: "Planejar o treino da próxima semana", s: "A semana de " + dataCurta(prox) + " ainda não tem planejamento salvo.", ir: { area: "treino", tab: "plano", pw: prox } });
       if (!D.dsem[prox]) L.push({ k: "plano-dieta|" + prox, t: "Planejar a dieta da próxima semana", s: "A semana de " + dataCurta(prox) + " ainda não tem plano alimentar salvo.", ir: { area: "dieta", dtab: "plano", dpw: prox } });
@@ -208,11 +220,17 @@
     return h;
   }
   function htmlNotif() {
-    var h = '<div class="cfg-cab"><h3>Notificações</h3></div><p class="hint">Os lembretes aparecem no sino do topo enquanto a tarefa do dia estiver pendente e somem quando você a conclui. Por enquanto eles ficam só dentro do app, sem aviso no celular com o app fechado.</p>';
+    var h = '<div class="cfg-cab"><h3>Notificações</h3></div><p class="hint">Escolha quais lembretes quer e a partir de que horas cada um aparece. Eles ficam no sino do topo enquanto a tarefa do dia estiver pendente e somem quando você a conclui. Por enquanto eles ficam só dentro do app, sem aviso no celular com o app fechado.</p>';
     TIPOS.forEach(function (t) {
-      h += '<div class="cfg-linha"><div class="cfg-rot"><b>' + esc(t[1]) + '</b><span>' + esc(t[2]) + '</span></div><div class="cfg-campo"><button type="button" class="chave" role="switch" aria-checked="' + ligado(t[0]) + '" data-c="notif-pref" data-v="' + t[0] + '"><i></i><span>' + (ligado(t[0]) ? "Ligado" : "Desligado") + '</span></button></div></div>';
+      var on = ligado(t[0]);
+      h += '<div class="cfg-linha"><div class="cfg-rot"><b>' + esc(t[1]) + '</b><span>' + esc(t[2]) + '</span></div><div class="cfg-campo notif-ctl"><button type="button" class="chave" role="switch" aria-checked="' + on + '" data-c="notif-pref" data-v="' + t[0] + '"><i></i><span>' + (on ? "Ligado" : "Desligado") + '</span></button>' +
+        (t[3] ? '<label class="f notif-hora"><span>A partir de</span><input type="time" id="hora-' + t[0] + '" data-hora="' + t[0] + '" value="' + esc(horaDe(t[0])) + '"' + (on ? "" : " disabled") + '></label>' : '<span class="hint">A qualquer hora</span>') + '</div></div>';
     });
     return h;
+  }
+  function htmlSobre() {
+    var A = window.__tdjApp;
+    return '<div class="cfg-cab"><h3>Sobre você</h3></div><p class="hint">O coach do treino, o da dieta e os feedbacks leem este texto antes de responder.</p><div class="cfg-sobre">' + (A && A.perfilHtml ? A.perfilHtml() : "") + '</div>';
   }
   function html() {
     if (!user) return "";
@@ -220,8 +238,9 @@
     return '<div class="head"><p class="eyebrow">Conta</p><h2>Configurações pessoais</h2><div class="sub">Seu perfil, segurança, aparência e notificações.</div></div>' +
       '<div class="cfg"><nav class="cfg-nav" aria-label="Seções">' +
       '<button type="button" data-c="cfg-aba" data-aba="perfil" aria-current="' + (aba === "perfil") + '">' + IC.pessoa + ' Perfil</button>' +
+      '<button type="button" data-c="cfg-aba" data-aba="sobre" aria-current="' + (aba === "sobre") + '">' + IC.doc + ' Sobre você' + (perfilCarregado && !perfilTexto.trim() ? '<i class="cfg-ponto" aria-label="Pendente"></i>' : "") + '</button>' +
       '<button type="button" data-c="cfg-aba" data-aba="notif" aria-current="' + (aba === "notif") + '">' + IC.sino + ' Notificações</button></nav>' +
-      '<div class="panel cfg-painel">' + (aba === "notif" ? htmlNotif() : htmlPerfil()) + '</div></div>';
+      '<div class="panel cfg-painel">' + (aba === "notif" ? htmlNotif() : aba === "sobre" ? htmlSobre() : htmlPerfil()) + '</div></div>';
   }
   function redesenha() { var A = window.__tdjApp; if (A) A.render(); }
 
@@ -253,7 +272,7 @@
     if (c === "busca-fechar") { fechaPesquisa(); return; }
     if (c === "busca-ir") { var r = ultimos[+b.dataset.i]; fechaPesquisa(); if (r && A) A.ir(r.ir); return; }
     if (c === "notif") { painel = painel === "notif" ? null : "notif"; desenhaTopo(); return; }
-    if (c === "notif-ir") { var n = lembretesAtuais[+b.dataset.i]; fechaPainel(); if (n) { prefs.lidas = prefs.lidas || {}; prefs.lidas[n.k] = true; salvaPrefs(); } desenhaTopo(); if (n && A) A.ir(n.ir); return; }
+    if (c === "notif-ir") { var n = lembretesAtuais[+b.dataset.i]; fechaPainel(); if (n) { prefs.lidas = prefs.lidas || {}; prefs.lidas[n.k] = true; salvaPrefs(); } desenhaTopo(); if (n && n.aba) aba = n.aba; if (n && A) A.ir(n.ir); return; }
     if (c === "notif-todas") { prefs.lidas = prefs.lidas || {}; lembretesAtuais.forEach(function (x) { prefs.lidas[x.k] = true; }); salvaPrefs(); desenhaTopo(); return; }
     if (c === "conta") { aba = b.dataset.aba || "perfil"; fechaPainel(); rasc = null; salvarMsg = null; senhaMsg = null; if (A) A.ir({ area: "conta" }); return; }
     if (c === "cfg-aba") { aba = b.dataset.aba; redesenha(); return; }
@@ -324,6 +343,13 @@
     var bt = document.querySelector('[data-c="salvar-nome"]'), m = user.user_metadata || {};
     if (bt) bt.disabled = rasc.first_name === (m.first_name || "") && rasc.last_name === (m.last_name || "");
   });
+  document.addEventListener("change", function (ev) {
+    var k = ev.target.dataset && ev.target.dataset.hora; if (!k) return;
+    var v = ev.target.value;
+    prefs.horas = prefs.horas || {};
+    if (/^\d{2}:\d{2}$/.test(v)) prefs.horas[k] = v; else delete prefs.horas[k];
+    salvaPrefs(); desenhaTopo();
+  });
   document.addEventListener("keydown", function (ev) {
     if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "k" && user) { ev.preventDefault(); abrePesquisa(); }
     if (ev.key === "Escape") { fechaPesquisa(); if (painel) { fechaPainel(); desenhaTopo(); } }
@@ -341,6 +367,18 @@
     sb = window.__tdjSb; user = window.__tdjUser;
     desenhaTopo();
     db = await window.claude.use("db");
-    if (db) db.doc("config/usuario").onSnapshot(function (s) { prefs = s.exists ? Object.assign({ notif: {}, lidas: {} }, s.data()) : { notif: {}, lidas: {} }; desenhaTopo(); });
+    if (db) db.doc("perfil/coach").onSnapshot(function (s) {
+      var antes = perfilCarregado && !perfilTexto.trim();
+      perfilTexto = s.exists ? String((s.data() || {}).texto || "") : "";
+      var primeira = !perfilCarregado; perfilCarregado = true;
+      var vazio = !perfilTexto.trim();
+      window.__tdjPerfilVazio = vazio;
+      // Primeiro acesso de quem ainda não preencheu: abre direto em Configurações → Sobre você (uma vez por aparelho).
+      var chave = "tdj-boasvindas-" + user.id, ja = false;
+      try { ja = !!localStorage.getItem(chave); } catch (e) {}
+      if (primeira && vazio && !ja) { try { localStorage.setItem(chave, "1"); } catch (e) {} aba = "sobre"; if (window.__tdjApp) window.__tdjApp.ir({ area: "conta" }); return; }
+      if (primeira || antes !== vazio) redesenha();
+    }, function () {});
+    if (db) db.doc("config/usuario").onSnapshot(function (s) { prefs = s.exists ? Object.assign({ notif: {}, lidas: {}, horas: {} }, s.data()) : { notif: {}, lidas: {}, horas: {} }; desenhaTopo(); });
   });
 })();
