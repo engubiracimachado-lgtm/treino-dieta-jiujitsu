@@ -1,0 +1,65 @@
+/* Layout responsivo do TDJ: barra lateral no computador, barra inferior no celular.
+   Carregado depois dos estilos do app para poder ajustá-los. */
+.lateral,.barra{display:none}
+.nav-ic{width:20px;height:20px;flex:none}
+
+/* ---------- celular e tablet ---------- */
+@media (max-width:1023px){
+  .wrap{padding-block:0 calc(env(safe-area-inset-bottom,0px) + 88px)}
+  #voltar{display:none!important}
+  .barra{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 6px)}
+  .barra button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.02em;padding:6px 2px;border-radius:10px;cursor:pointer}
+  .barra button .nav-ic{width:22px;height:22px}
+  .barra button[aria-current="page"]{color:var(--accent)}
+  .barra button[aria-current="page"] .nav-ic{transform:translateY(-1px)}
+  .tabs{overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:1 0 auto;padding-inline:12px;white-space:nowrap}
+}
+@media (max-width:560px){
+  .top{padding-block:10px 8px;gap:10px}
+  .brand h1{font-size:24px}
+  .marca-logo{width:28px;height:28px}
+  .status span{display:none}
+  .brand{flex-wrap:nowrap}
+  .marca{min-width:0}
+  .brand h1{font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .brand-dir{flex-wrap:nowrap;gap:6px}
+  .topo-conta{gap:6px}
+  .topo-btn{width:36px;height:36px}
+  .avatar{width:34px;height:34px;font-size:14px}
+  .tabs button{font-size:15px;padding-block:8px}
+  .head h2{font-size:30px}
+  main{gap:16px;padding-top:14px}
+  .panel,.ex,.pday{padding:12px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ---------- computador ---------- */
+@media (min-width:1024px){
+  .wrap{max-width:1320px;display:grid;grid-template-columns:240px minmax(0,1fr);column-gap:36px;padding-inline:24px;padding-block:0 64px}
+  .lateral{display:flex;flex-direction:column;gap:6px;grid-column:1;grid-row:1/span 2;position:sticky;top:0;align-self:start;height:100vh;padding-block:22px 20px;border-right:1px solid var(--line);padding-right:18px}
+  .top,#app{grid-column:2}
+  .top{padding-block:20px 12px}
+  #app{max-width:1080px;width:100%}
+  .top .marca-logo,#voltar{display:none!important}
+  .brand h1{font-size:30px}
+  .tabs{max-width:720px}
+  .lat-marca{display:flex;align-items:center;gap:12px;padding:4px 8px 18px;border-bottom:1px solid var(--line);margin-bottom:10px}
+  .lat-marca img{width:40px;height:40px;border-radius:10px}
+  .lat-marca b{display:block;font-family:var(--display);font-size:24px;letter-spacing:.04em;line-height:1}
+  .lat-marca span{font-size:12px;color:var(--muted)}
+  .lat-nav{display:flex;flex-direction:column;gap:4px}
+  .lateral button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;color:var(--ink);font-size:15px;font-weight:600;padding:11px 12px;border-radius:10px;cursor:pointer;text-align:left}
+  .lateral button:hover{background:var(--sunk)}
+  .lateral button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+  .lat-conta{margin-top:auto}
+  .head h2{font-size:44px}
+  .areas{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .area{min-height:240px}
+  #app>.list,#app section>.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px}
+  .cfg{grid-template-columns:220px minmax(0,1fr)}
+}
+@media (min-width:1400px){
+  #app{max-width:1120px}
+}

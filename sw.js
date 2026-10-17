@@ -1,7 +1,7 @@
 /* Service worker network-first: sempre tenta a versão mais nova pela rede e usa o cache só quando estiver sem internet.
    As chamadas ao Supabase (dados, login e coach) nunca passam pelo cache. */
 const CACHE = "tdj-v1";
-const SHELL = ["./", "./index.html", "./backend.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png", "./icons/apple-touch-icon.png", "./icons/logo.png", "./conta.js", "./conta.css"];
+const SHELL = ["./", "./index.html", "./backend.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png", "./icons/apple-touch-icon.png", "./icons/logo.png", "./conta.js", "./conta.css", "./layout.css"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

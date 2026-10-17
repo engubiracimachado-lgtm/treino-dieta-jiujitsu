@@ -27,10 +27,22 @@ rep('  if(a.indexOf("d-")===0){dClick(a,b);return}', '  if(a==="sair"){if(window
 // nome comercial: TDJ
 rep('<h1 id="marca">Treino, Dieta e Jiujitsu</h1>', '<h1 id="marca">TDJ</h1>');
 rep('area==="jiu"?"Jiujitsu":"Treino, Dieta e Jiujitsu"', 'area==="jiu"?"Jiujitsu":area==="conta"?"Configurações":"TDJ"');
+// navegação: barra lateral no computador e barra inferior no celular (layout.css)
+var IC_NAV = {
+  home: '<svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>',
+  treino: '<svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 12h10"/><rect x="3" y="8" width="4" height="8" rx="1"/><rect x="17" y="8" width="4" height="8" rx="1"/><path d="M1.5 10.5v3M22.5 10.5v3"/></svg>',
+  dieta: '<svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M5 3v5M9 3v5"/><path d="M17 21V3c-2 1-3 4-3 7s1 4 3 4"/></svg>',
+  jiu: '<svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10h20v4H2z"/><path d="M10 10v4h4v-4"/><path d="m10 14-3 7M14 14l3 7"/></svg>',
+  conta: '<svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
+};
+const AREAS_NAV = [["home", "Início"], ["treino", "Treino"], ["dieta", "Dieta"], ["jiu", "Jiujitsu"]];
+const navBtns = AREAS_NAV.map(([a, t]) => '<button type="button" data-act="area" data-a="' + a + '" data-nav="' + a + '">' + IC_NAV[a] + '<span>' + t + '</span></button>').join("");
+rep('<main id="app"></main>', '<main id="app"></main>\n  <aside class="lateral" aria-label="Áreas do app"><div class="lat-marca"><img src="icons/logo.png" alt="" width="40" height="40"><div><b>TDJ</b><span>Treino, Dieta e Jiujitsu</span></div></div><nav class="lat-nav">' + navBtns + '</nav><button type="button" class="lat-conta" data-c="conta" data-aba="perfil" data-nav="conta">' + IC_NAV.conta + '<span>Configurações</span></button></aside>\n  <nav class="barra" aria-label="Áreas do app">' + navBtns + '</nav>');
+
 // configurações pessoais e topo (conta.js): a área "conta" e os ganchos de dados e navegação
 rep('app.innerHTML=area==="dieta"?renderDietaArea():area==="jiu"?renderJiuArea():renderHome();setStatus();return}', 'app.innerHTML=area==="dieta"?renderDietaArea():area==="jiu"?renderJiuArea():area==="conta"&&window.__tdjConta?window.__tdjConta.html():renderHome();setStatus();return}');
 rep('function render(){\n  needsRender=false;', 'function render(){\n  needsRender=false;\n  if(window.__tdjConta)setTimeout(window.__tdjConta.depois,0);');
-rep('if(window.claude&&window.claude.use)window.claude.use("sample")', 'window.__tdjApp={dados:function(){return{plano:plano,semanas:semanas,sessoes:sessoes,sono:sono,dsem:dsem,ddias:ddias,jtreinos:jtreinos,jnotas:jnotas,jaulas:jaulas}},ir:function(o){if(o.area)area=o.area;if(o.tab)tab=o.tab;if(o.sel)sel=o.sel;if(o.dtab)dtab=o.dtab;if(o.dsel)dsel=o.dsel;if(o.jtab)jtab=o.jtab;if("jsel" in o)jsel=o.jsel;if("jnsel" in o)jnsel=o.jnsel;if("jasel" in o)jasel=o.jasel;if(o.pw){pw=o.pw;editW=null}if(o.dpw){dpw=o.dpw;deditW=null}window.scrollTo(0,0);render()},render:function(){render()}};\nif(window.claude&&window.claude.use)window.claude.use("sample")');
+rep('if(window.claude&&window.claude.use)window.claude.use("sample")', 'window.__tdjApp={estado:function(){return{area:area}},dados:function(){return{plano:plano,semanas:semanas,sessoes:sessoes,sono:sono,dsem:dsem,ddias:ddias,jtreinos:jtreinos,jnotas:jnotas,jaulas:jaulas}},ir:function(o){if(o.area)area=o.area;if(o.tab)tab=o.tab;if(o.sel)sel=o.sel;if(o.dtab)dtab=o.dtab;if(o.dsel)dsel=o.dsel;if(o.jtab)jtab=o.jtab;if("jsel" in o)jsel=o.jsel;if("jnsel" in o)jnsel=o.jnsel;if("jasel" in o)jasel=o.jasel;if(o.pw){pw=o.pw;editW=null}if(o.dpw){dpw=o.dpw;deditW=null}window.scrollTo(0,0);render()},render:function(){render()}};\nif(window.claude&&window.claude.use)window.claude.use("sample")');
 
 // botão de modo claro/escuro no cabeçalho
 rep('<div class="status" id="status" role="status"><i></i><span>Conectando…</span></div>', '<div class="brand-dir"><div class="status" id="status" role="status"><i></i><span>Conectando…</span></div><div class="topo-conta" id="topo-conta" hidden></div></div>');
@@ -64,6 +76,7 @@ const head = `<!doctype html>
 </head>
 <body>
 `;
+s = s.replace("\n<script>\n(function(){", '\n<link rel="stylesheet" href="layout.css">\n<script>\n(function(){');
 s = head + s.replace("<title>Diário de Treino</title>", "<title>TDJ</title>") + "\n</body>\n</html>\n";
 fs.writeFileSync(path.join(__dirname, "..", "index.html"), s);
 console.log("index.html gerado", Math.round(s.length / 1024) + " KB");

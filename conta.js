@@ -18,7 +18,7 @@
   function segunda(s) { var p = s.split("-"), d = new Date(+p[0], +p[1] - 1, +p[2]); return addDias(s, -((d.getDay() + 6) % 7)); }
   function dataCurta(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" }).replace(/\./g, ""); }
 
-  var sb = null, user = null, db = null, prefs = { notif: {} }, online = navigator.onLine;
+  var sb = null, user = null, db = null, prefs = { notif: {}, lidas: {} }, online = navigator.onLine;
   var aba = "perfil", rasc = null, senhaAberta = false, senhaMsg = null, mfa = { carregado: false, ativo: null, novo: null, msg: null, desativar: false }, salvarMsg = null;
 
   /* ---------------- quem está logado ---------------- */
@@ -45,27 +45,27 @@
   function lembretes() {
     var A = window.__tdjApp; if (!A) return [];
     var D = A.dados(), h = hojeISO(), agora = new Date(), hr = agora.getHours(), dw = agora.getDay(), L = [];
-    if (ligado("sono") && hr >= 5) { var n = D.sono[h]; if (!n || !n.dormiu || !n.acordou) L.push({ t: "Registrar a noite de sono", s: "Horários e nota de hoje ainda estão em branco.", ir: { area: "home" } }); }
-    if (ligado("peso") && (dw === 1 || dw === 3 || dw === 5)) { var dd = D.ddias[h]; if (!dd || dd.peso == null) L.push({ t: "Pesagem em jejum", s: "Dia de pesagem: registre o peso no Diário da dieta.", ir: { area: "dieta", dtab: "dia", dsel: h } }); }
+    if (ligado("sono") && hr >= 5) { var n = D.sono[h]; if (!n || !n.dormiu || !n.acordou) L.push({ k: "sono|" + h, t: "Registrar a noite de sono", s: "Horários e nota de hoje ainda estão em branco.", ir: { area: "home" } }); }
+    if (ligado("peso") && (dw === 1 || dw === 3 || dw === 5)) { var dd = D.ddias[h]; if (!dd || dd.peso == null) L.push({ k: "peso|" + h, t: "Pesagem em jejum", s: "Dia de pesagem: registre o peso no Diário da dieta.", ir: { area: "dieta", dtab: "dia", dsel: h } }); }
     if (ligado("treino")) {
       var w = D.semanas[segunda(h)], k = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"][dw], pd = w && w.dias && w.dias[k], s = D.sessoes[h];
-      if (pd && pd.ex && pd.ex.some(function (e) { return (e.nome || "").trim(); }) && !(s && s.concluido)) L.push({ t: "Treino de hoje: " + (pd.nome || "Treino"), s: s ? "Em andamento; falta concluir." : "Ainda não começou.", ir: { area: "treino", tab: "hoje", sel: h } });
+      if (pd && pd.ex && pd.ex.some(function (e) { return (e.nome || "").trim(); }) && !(s && s.concluido)) L.push({ k: "treino|" + h, t: "Treino de hoje: " + (pd.nome || "Treino"), s: s ? "Em andamento; falta concluir." : "Ainda não começou.", ir: { area: "treino", tab: "hoje", sel: h } });
     }
     if (ligado("dieta") && hr >= 12) {
       var x = D.ddias[h], dw2 = D.dsem[segunda(h)], kk = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"][dw], pl = dw2 && dw2.dias && dw2.dias[kk];
       if ((pl && pl.refs && pl.refs.length) && !(x && x.concluido)) {
         var reg = x ? x.refs.filter(function (r) { return r.kcal != null; }).length : 0, tot = x ? x.refs.filter(function (r) { return !r.opc; }).length : pl.refs.filter(function (r) { return !r.opc; }).length;
-        L.push({ t: "Dieta de hoje", s: reg + " de " + tot + " refeições registradas. Conclua o dia para receber o feedback.", ir: { area: "dieta", dtab: "dia", dsel: h } });
+        L.push({ k: "dieta|" + h, t: "Dieta de hoje", s: reg + " de " + tot + " refeições registradas. Conclua o dia para receber o feedback.", ir: { area: "dieta", dtab: "dia", dsel: h } });
       }
     }
     if (ligado("jiu") && dw >= 1 && dw <= 6 && hr >= 21) {
       var tem = Object.keys(D.jtreinos).some(function (id) { return D.jtreinos[id].data === h; });
-      if (!tem) L.push({ t: "Treino de jiujitsu de hoje", s: "Registre tipo, técnicas e rolas enquanto está fresco.", ir: { area: "jiu", jtab: "treinos", jsel: null } });
+      if (!tem) L.push({ k: "jiu|" + h, t: "Treino de jiujitsu de hoje", s: "Registre tipo, técnicas e rolas enquanto está fresco.", ir: { area: "jiu", jtab: "treinos", jsel: null } });
     }
     if (ligado("plano") && (dw === 5 || dw === 6 || dw === 0)) {
       var prox = addDias(segunda(h), 7);
-      if (!D.semanas[prox]) L.push({ t: "Planejar o treino da próxima semana", s: "A semana de " + dataCurta(prox) + " ainda não tem planejamento salvo.", ir: { area: "treino", tab: "plano", pw: prox } });
-      if (!D.dsem[prox]) L.push({ t: "Planejar a dieta da próxima semana", s: "A semana de " + dataCurta(prox) + " ainda não tem plano alimentar salvo.", ir: { area: "dieta", dtab: "plano", dpw: prox } });
+      if (!D.semanas[prox]) L.push({ k: "plano-treino|" + prox, t: "Planejar o treino da próxima semana", s: "A semana de " + dataCurta(prox) + " ainda não tem planejamento salvo.", ir: { area: "treino", tab: "plano", pw: prox } });
+      if (!D.dsem[prox]) L.push({ k: "plano-dieta|" + prox, t: "Planejar a dieta da próxima semana", s: "A semana de " + dataCurta(prox) + " ainda não tem plano alimentar salvo.", ir: { area: "dieta", dtab: "plano", dpw: prox } });
     }
     return L;
   }
@@ -147,13 +147,26 @@
   /* ---------------- topo: pesquisa, sino e usuário ---------------- */
   var painel = null;
   function fechaPainel() { painel = null; var p = document.getElementById("notif-painel"); if (p) p.hidden = true; }
+  function lida(n) { return !!(prefs.lidas && prefs.lidas[n.k]); }
+  function salvaPrefs() {
+    var lim = addDias(hojeISO(), -14), novas = {};
+    Object.keys(prefs.lidas || {}).forEach(function (k) { if ((k.split("|")[1] || "") >= lim) novas[k] = true; });
+    prefs.lidas = novas;
+    if (db) db.doc("config/usuario").set(JSON.parse(JSON.stringify(prefs))).catch(function () {});
+  }
+  function marcaNav() {
+    var A = window.__tdjApp; if (!A || !A.estado) return;
+    var a = A.estado().area;
+    document.querySelectorAll("[data-nav]").forEach(function (b) { if (b.dataset.nav === a) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  }
   function desenhaTopo() {
+    marcaNav();
     var el = document.getElementById("topo-conta"); if (!el || !user) return;
-    var L = lembretes();
+    var L = lembretes(), N = L.filter(function (n) { return !lida(n); });
     el.innerHTML = '<button class="topo-btn" type="button" data-c="busca" aria-label="Pesquisar" title="Pesquisar (Ctrl+K)">' + IC.lupa + '</button>' +
-      '<div class="topo-notif"><button class="topo-btn" type="button" data-c="notif" aria-label="Notificações' + (L.length ? ", " + L.length + " pendentes" : "") + '" aria-expanded="' + (painel === "notif") + '">' + IC.sino + (L.length ? '<span class="topo-badge">' + L.length + '</span>' : "") + '</button>' +
-      '<div class="notif-painel" id="notif-painel"' + (painel === "notif" ? "" : " hidden") + '><p class="eyebrow">Lembretes de hoje</p>' +
-      (L.length ? L.map(function (n, i) { return '<button type="button" class="notif-item" data-c="notif-ir" data-i="' + i + '"><b>' + esc(n.t) + '</b><span>' + esc(n.s) + '</span></button>'; }).join("") : '<p class="hint">Tudo em dia por aqui.</p>') +
+      '<div class="topo-notif"><button class="topo-btn" type="button" data-c="notif" aria-label="Notificações' + (N.length ? ", " + N.length + " não lidas" : "") + '" aria-expanded="' + (painel === "notif") + '">' + IC.sino + (N.length ? '<span class="topo-badge">' + N.length + '</span>' : "") + '</button>' +
+      '<div class="notif-painel" id="notif-painel"' + (painel === "notif" ? "" : " hidden") + '><div class="notif-cab"><p class="eyebrow">Lembretes de hoje</p>' + (N.length ? '<button type="button" class="btn ghost sm" data-c="notif-todas">Marcar todas como lidas</button>' : "") + '</div>' +
+      (L.length ? L.map(function (n, i) { return '<button type="button" class="notif-item' + (lida(n) ? " lida" : "") + '" data-c="notif-ir" data-i="' + i + '"><b>' + (lida(n) ? "" : '<i class="notif-ponto" aria-label="Não lida"></i>') + esc(n.t) + '</b><span>' + esc(n.s) + '</span></button>'; }).join("") : '<p class="hint">Tudo em dia por aqui.</p>') +
       '<button type="button" class="btn ghost sm" data-c="conta" data-aba="notif">Escolher lembretes</button></div></div>' +
       '<button class="topo-user" type="button" data-c="conta" data-aba="perfil" aria-label="Configurações pessoais de ' + esc(nomeDe(user)) + '"><span class="avatar">' + esc(iniciais(user)) + '<i class="' + (online ? "on" : "off") + '"></i></span><span class="topo-nome">' + esc(nomeDe(user)) + '</span>' + IC.seta + '</button>';
     el.hidden = false;
@@ -240,7 +253,8 @@
     if (c === "busca-fechar") { fechaPesquisa(); return; }
     if (c === "busca-ir") { var r = ultimos[+b.dataset.i]; fechaPesquisa(); if (r && A) A.ir(r.ir); return; }
     if (c === "notif") { painel = painel === "notif" ? null : "notif"; desenhaTopo(); return; }
-    if (c === "notif-ir") { var n = lembretesAtuais[+b.dataset.i]; fechaPainel(); if (n && A) A.ir(n.ir); return; }
+    if (c === "notif-ir") { var n = lembretesAtuais[+b.dataset.i]; fechaPainel(); if (n) { prefs.lidas = prefs.lidas || {}; prefs.lidas[n.k] = true; salvaPrefs(); } desenhaTopo(); if (n && A) A.ir(n.ir); return; }
+    if (c === "notif-todas") { prefs.lidas = prefs.lidas || {}; lembretesAtuais.forEach(function (x) { prefs.lidas[x.k] = true; }); salvaPrefs(); desenhaTopo(); return; }
     if (c === "conta") { aba = b.dataset.aba || "perfil"; fechaPainel(); rasc = null; salvarMsg = null; senhaMsg = null; if (A) A.ir({ area: "conta" }); return; }
     if (c === "cfg-aba") { aba = b.dataset.aba; redesenha(); return; }
     if (c === "sair") { if (window.__sair) window.__sair(); return; }
@@ -253,7 +267,7 @@
     }
     if (c === "notif-pref") {
       prefs.notif[b.dataset.v] = !ligado(b.dataset.v);
-      if (db) db.doc("config/usuario").set(JSON.parse(JSON.stringify(prefs))).catch(function () {});
+      salvaPrefs();
       redesenha(); desenhaTopo(); return;
     }
     if (c === "salvar-nome") {
@@ -327,6 +341,6 @@
     sb = window.__tdjSb; user = window.__tdjUser;
     desenhaTopo();
     db = await window.claude.use("db");
-    if (db) db.doc("config/usuario").onSnapshot(function (s) { prefs = s.exists ? Object.assign({ notif: {} }, s.data()) : { notif: {} }; desenhaTopo(); });
+    if (db) db.doc("config/usuario").onSnapshot(function (s) { prefs = s.exists ? Object.assign({ notif: {}, lidas: {} }, s.data()) : { notif: {}, lidas: {} }; desenhaTopo(); });
   });
 })();
