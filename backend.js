@@ -219,7 +219,7 @@
     if (!res.ok) {
       var c = "upstream_error"; try { c = (await res.json()).error || c; } catch (e) {}
       if (res.status === 401) c = "session_expired";
-      throw { code: c === "bad_key" ? "no_key" : c, message: "HTTP " + res.status };
+      throw { code: c, message: "HTTP " + res.status };
     }
     var leitor = res.body.getReader(), dec = new TextDecoder(), resto = "", fim = null;
     try {
@@ -231,7 +231,7 @@
           if (!linhas[j].trim()) continue;
           var m = JSON.parse(linhas[j]);
           if (m.d) { texto += m.d; if (opts.onText) try { opts.onText({ text: texto, delta: m.d }); } catch (e) {} }
-          else if (m.error) throw { code: m.error === "bad_key" ? "no_key" : m.error, message: m.error, text: texto || undefined };
+          else if (m.error) throw { code: m.error, message: m.error, text: texto || undefined };
           else if (m.done) fim = m;
         }
       }

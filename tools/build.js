@@ -15,7 +15,7 @@ todos('Sem o cálculo automático nesta visualização; usei o plano na proporç
 todos('As fotos vão para o Claude só para essa resposta e não ficam guardadas no aplicativo.', 'As fotos vão para o Claude só para essa resposta e não ficam guardadas.');
 
 // erros novos da Edge Function
-rep('var COACH_ERRO={', 'var COACH_ERRO={no_key:"A IA ainda não foi configurada: falta a chave da API da Anthropic no Supabase (segredo ANTHROPIC_API_KEY).",invalid_request:"A IA recusou o pedido por um problema de formato. Tente de novo; se repetir, avise o desenvolvedor.",');
+rep('var COACH_ERRO={', 'var COACH_ERRO={bad_key:"A chave da API da Anthropic salva no Supabase foi recusada. Confira se ela está ativa e se a conta da Anthropic tem crédito.",no_key:"A IA ainda não foi configurada: falta a chave da API da Anthropic no Supabase (segredo ANTHROPIC_API_KEY).",invalid_request:"A IA recusou o pedido por um problema de formato. Tente de novo; se repetir, avise o desenvolvedor.",');
 // registrar refeição é uma tarefa curta: esforço baixo
 rep('sampleFn.json?sampleFn.json(prompt,{signal:dRegCtl.signal})', 'sampleFn.json?sampleFn.json(prompt,{signal:dRegCtl.signal,modelTier:"quick"})');
 
