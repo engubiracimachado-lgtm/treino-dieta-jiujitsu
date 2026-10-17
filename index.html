@@ -154,6 +154,8 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.75}
 .hbar b{display:block;height:100%;background:var(--accent);border-radius:2px}
 .seg button.per[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .fb{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--sunk);border-radius:10px;padding:12px 14px}
+.pc-painel{border-color:var(--accent)}
+.pc-painel .chat{max-height:420px;overflow:auto}
 .chat{display:flex;flex-direction:column;gap:8px}
 .msg{padding:9px 12px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;max-width:92%}
 .msg.u{align-self:flex-end;background:var(--accent);color:var(--accent-ink)}
@@ -915,6 +917,7 @@ function renderPlano(){
     if(ant)h+='<div class="acts"><button class="btn pri" data-act="pcopy" data-k="'+ant+'">Copiar o planejamento de '+esc(rotSemana(ant,semanas[ant].dias))+'</button><span class="hint">Traz todos os treinos daquela semana para cá; depois é só alterar o que mudou e salvar.</span></div>';
   }
   h+='<p class="hint">'+(salvo?"Faça as mudanças abaixo e salve de novo no final da página.":"Monte ou ajuste o plano abaixo e toque em “Salvar planejamento da semana” no final da página. O que aparece aqui é o último plano em que você trabalhou, para servir de base.")+' Dia sem exercício conta como descanso. Cada série tem suas próprias repetições e carga; “+ Série” copia a anterior.</p>';
+  h+=renderCoachPlano("t");
   h+=renderEditor();
   h+='<div class="panel"><div class="acts"><button class="btn pri big" data-act="psave"'+(planoTemAlgo()?"":" disabled")+'>Salvar planejamento da semana ('+esc(rotSemana(pw,plano.dias))+')</button>'+(salvo?'<button class="btn ghost" data-act="pcancel">Cancelar alterações</button>':"")+'</div><p class="hint">Depois de salvo, ele aparece na aba Treino nos dias dessa semana. Para mudar depois, use “Alterar planejamento”.</p></div>';
   return h;
@@ -1329,6 +1332,7 @@ function renderDPlano(){
     if(ant)h+='<div class="acts"><button class="btn pri" data-act="d-pcopy" data-k="'+ant+'">Copiar o plano de '+esc(dRotSemana(ant))+'</button><span class="hint">Traz todas as refeições daquela semana; depois é só alterar o que mudou e salvar.</span></div>';
   }
   h+='<p class="hint">Monte cada refeição com os itens, um por linha: no Diário, cada linha vira um item para marcar “Comi” ou “Não comi”. Refeições opcionais (pré-treino, margem do doce) não entram na cobrança do dia.</p>';
+  h+=renderCoachPlano("d");
   h+=renderDEditor();
   h+='<div class="panel"><div class="acts"><button class="btn pri big" data-act="d-psave"'+(dPlanoTem()?"":" disabled")+'>Salvar plano da semana ('+esc(dRotSemana(dpw))+')</button>'+(salvo?'<button class="btn ghost" data-act="d-pcancel">Cancelar alterações</button>':"")+'</div><p class="hint">Depois de salvo, ele aparece no Diário nos dias dessa semana.</p></div>';
   return h;
@@ -1677,6 +1681,99 @@ function jInput(el){
 }
 try{var jj0=JSON.parse(localStorage.getItem(LS)||"null");if(jj0){jperfil=jNormPerfil(jj0.jperfil);jtreinos=jj0.jtreinos||{};Object.keys(jtreinos).forEach(function(k){jNormTreino(jtreinos[k],k)});jnotas=jj0.jnotas||{}}}catch(e){}
 
+/* ---------- planejamento da semana com o coach (treino "t" e dieta "d") ---------- */
+var pc={t:{busy:false,ctl:null,err:"",chat:[],draft:"",antes:null,semana:null},d:{busy:false,ctl:null,err:"",chat:[],draft:"",antes:null,semana:null}};
+function pcSemana(k){return k==="t"?pw:dpw}
+function pcRot(k){var m=pcSemana(k),b=addDays(m,6);return dm(m)+" a "+dm(b)}
+function pcBotao(k){var m=pcSemana(k),h=monday(hoje);return m===addDays(h,7)?"Fazer planejamento da próxima semana":m===h?"Fazer planejamento desta semana":"Fazer planejamento da semana de "+pcRot(k)}
+/* Treino: planejamento <-> JSON simples que o coach lê e devolve. */
+function pcTreinoJson(dias){var o={};DIAS.forEach(function(d){var p=dias[d.k];o[d.k]={nome:p.nome||"",obs:p.obs||"",ex:p.ex.filter(function(e){return(e.nome||"").trim()}).map(function(e){return{nome:e.nome,nota:e.nota||"",series:e.sets.map(function(t){return[t.reps||"",t.carga==null?null:t.carga]})}})}});return o}
+function pcIgual(o,k){var p=(o&&o[k])||{},n=0;while(p&&p.igual_a&&o[p.igual_a]&&n<7){p=o[p.igual_a];n++}return p}
+function pcTreinoDeJson(o){var dias={};DIAS.forEach(function(d){var p=pcIgual(o,d.k);dias[d.k]={nome:String(p.nome||""),obs:String(p.obs||""),ex:(Array.isArray(p.ex)?p.ex:[]).filter(function(e){return e&&String(e.nome||"").trim()}).map(function(e){
+  var s=(Array.isArray(e.series)?e.series:[]).map(function(t){var r=Array.isArray(t)?t[0]:t&&t.reps,c=Array.isArray(t)?t[1]:t&&t.carga;return{reps:String(r!=null?r:""),carga:c==null||c===""?null:num(c)}});
+  return{id:uid(),nome:String(e.nome).trim(),nota:String(e.nota||""),sets:s.length?s:[{reps:"",carga:null}]}})}});return dias}
+/* Dieta: refeições com itens em lista. */
+function pcDietaJson(dias){var o={};DIAS.forEach(function(d){var p=dias[d.k];o[d.k]={metaKcal:p.metaKcal,metaProt:p.metaProt,refs:p.refs.map(function(r){return{nome:r.nome,hora:r.hora||"",kcal:r.kcal,prot:r.prot,opcional:!!r.opc,itens:String(r.itens||"").split("\n").map(function(x){return x.trim()}).filter(Boolean),orientacao:r.nota||""}})}});return o}
+function pcDietaDeJson(o){var dias={};DIAS.forEach(function(d){var p=pcIgual(o,d.k);var n=function(v){var x=num(v);return x==null?null:Math.round(x)};dias[d.k]={metaKcal:n(p.metaKcal),metaProt:n(p.metaProt),refs:(Array.isArray(p.refs)?p.refs:[]).filter(function(r){return r&&String(r.nome||"").trim()}).map(function(r){
+  return{id:uid(),nome:String(r.nome).trim(),hora:/^\d{2}:\d{2}$/.test(String(r.hora||""))?r.hora:"",kcal:n(r.kcal),prot:r.prot==null?null:num(r.prot),opc:!!r.opcional,itens:(Array.isArray(r.itens)?r.itens:String(r.itens||"").split("\n")).map(function(x){return String(x).trim()}).filter(Boolean).join("\n"),nota:String(r.orientacao||r.nota||"")}})}});return dias}
+
+function pcContexto(k){
+  var ws=pcSemana(k),ini=addDays(ws,-21),L=[];
+  L.push("HOJE: "+longDate(hoje)+". SEMANA A PLANEJAR: segunda "+dm(ws)+" a domingo "+dm(addDays(ws,6))+"/"+addDays(ws,6).slice(0,4)+".");
+  L.push("\nPERFIL DO USUÁRIO (escrito por ele):\n"+(perfil.texto.trim().slice(0,20000)||"(vazio)"));
+  if(k==="t"){
+    Object.keys(semanas).filter(function(x){return x<ws}).sort().slice(-2).forEach(function(x){L.push("\nPLANO DE TREINO SALVO DA SEMANA DE "+dm(x)+":\n"+JSON.stringify(pcTreinoJson(semanas[x].dias)))});
+    var ss=Object.keys(sessoes).filter(function(x){return x>=ini&&x<ws&&tocado(sessoes[x])}).sort();
+    L.push("\nTREINOS DE MUSCULAÇÃO REGISTRADOS NAS ÚLTIMAS 3 SEMANAS (o que foi feito de fato):\n"+(ss.length?ss.map(function(x){var s=sessoes[x],es=esfSessao(s);return x+" "+(s.nome||"Treino")+(s.min!=null?" | "+s.min+" min":"")+(es?" | esforço "+fmt(Math.round(es*10)/10):"")+(s.notas?" | anotações: "+s.notas:"")+"\n"+s.ex.map(exLinha).join("\n")+(s.feedback?"\nFeedback do coach nesse dia: "+s.feedback.replace(/\n/g," "):"")}).join("\n\n"):"(nenhum)"));
+    var jt=jLista().filter(function(t){return t.data>=addDays(ws,-14)&&t.data<ws});
+    if(jt.length)L.push("\nJIUJITSU NAS ÚLTIMAS 2 SEMANAS: "+jt.length+" treinos ("+jt.map(function(t){return t.data+" "+jTipoTxt(t)+(t.rolas.length?", "+t.rolas.length+" rolas":"")}).join("; ")+").");
+    var dk=Object.keys(ddias).filter(function(x){return x>=addDays(ws,-14)&&x<ws&&dTocado(ddias[x])}).sort();
+    if(dk.length)L.push("\nDIETA NAS ÚLTIMAS 2 SEMANAS (total do dia): "+dk.map(function(x){var t=dDiaTot(ddias[x]);return x+" ~"+t.kcal+" kcal, "+t.prot+" g P"+(ddias[x].peso!=null?", peso "+fmt(ddias[x].peso)+" kg":"")}).join("; "));
+  }else{
+    Object.keys(dsem).filter(function(x){return x<ws}).sort().slice(-2).forEach(function(x){L.push("\nPLANO ALIMENTAR SALVO DA SEMANA DE "+dm(x)+":\n"+JSON.stringify(pcDietaJson(dsem[x].dias)))});
+    var dd=Object.keys(ddias).filter(function(x){return x>=ini&&x<ws&&dTocado(ddias[x])}).sort();
+    L.push("\nDIAS DE DIETA REGISTRADOS NAS ÚLTIMAS 3 SEMANAS (o que foi comido de fato):\n"+(dd.length?dd.map(function(x){var d=ddias[x],t=dDiaTot(d);return x+": ~"+t.kcal+" kcal, "+t.prot+" g P"+(d.metaKcal?" (meta "+d.metaKcal+")":"")+(d.peso!=null?" | peso em jejum "+fmt(d.peso)+" kg":"")+(d.notas?" | anotações: "+d.notas:"")+"\n"+d.refs.map(dRefLinha).join("\n")+(d.feedback?"\nFeedback do coach nesse dia: "+d.feedback.replace(/\n/g," "):"")}).join("\n\n"):"(nenhum)"));
+    var w=semanas[ws];
+    L.push("\nTREINO DE MUSCULAÇÃO PLANEJADO PARA A SEMANA: "+(w?DIAS.map(function(d){var p=w.dias[d.k];return d.n+": "+(p.ex.length?(p.nome||"Treino"):"descanso")}).join("; "):"ainda não planejado"));
+  }
+  var sk=Object.keys(sono).filter(function(x){return x>=addDays(ws,-14)&&sonoMin(sono[x])!=null}).sort();
+  if(sk.length)L.push("\nSONO NAS ÚLTIMAS 2 SEMANAS: "+sk.map(function(x){return x+" "+hTxt(sonoMin(sono[x]))+(sono[x].nota?" nota "+sono[x].nota:"")}).join("; "));
+  return L.join("\n").slice(0,160000);
+}
+var PC_FORMATO={
+  t:'{"resposta": "texto curto para o usuário", "plano": {"seg": {"nome": "Lower + potência", "obs": "observações do dia", "ex": [{"nome": "Zercher", "nota": "como fazer, descanso, RPE", "series": [["3", 35], ["3", 37.5]]}]}, "ter": {...}, "qua": {...}, "qui": {...}, "sex": {...}, "sab": {"nome": "", "obs": "", "ex": []}, "dom": {"nome": "", "obs": "", "ex": []}}}\nCada série é [repetições, carga em kg ou null]. Mantenha "nota" e "obs" curtas (até ~140 caracteres).',
+  d:'{"resposta": "texto curto para o usuário", "plano": {"seg": {"metaKcal": 2400, "metaProt": 185, "refs": [{"nome": "Café da manhã", "hora": "08:00", "kcal": 660, "prot": 42, "opcional": false, "itens": ["4 ovos mexidos sem óleo", "2 fatias de pão caseiro (90 g)"], "orientacao": "trocas permitidas"}]}, "ter": {"igual_a": "seg"}, "qua": {"igual_a": "seg"}, "qui": {"igual_a": "seg"}, "sex": {...}, "sab": {...}, "dom": {...}}}\nUse {"igual_a": "seg"} para um dia idêntico a outro já descrito. Mantenha "orientacao" curta (até ~140 caracteres).'
+};
+var PC_REGRAS={
+  t:"Você é o coach de treino do usuário, dentro do aplicativo dele. Sua tarefa é montar e ajustar o planejamento de musculação da semana indicada. Baseie-se no histórico real (o que foi feito, cargas, repetições, esforço, observações e feedbacks), no perfil e no que deu certo ou errado nas últimas semanas: progrida cargas que saíram com folga, mantenha ou reduza as que ficaram pesadas, e respeite a rotina, o jiujitsu e as preferências do perfil (por exemplo, se ele não quer trocar exercícios, mantenha os mesmos). Mantenha os nomes dos exercícios iguais aos do histórico para a evolução continuar comparável. Cada série tem suas repetições e sua carga em kg (use a mesma convenção de carga por lado descrita no perfil; carga null quando for peso corporal ou tempo). Dias sem treino ficam com nome vazio e lista vazia. No campo resposta, explique em português, em texto simples e curto (até umas 8 linhas), o que mudou em relação à semana anterior e por quê.",
+  d:"Você é o coach de alimentação do usuário, dentro do aplicativo dele. Sua tarefa é montar e ajustar o plano alimentar da semana indicada. Baseie-se no que ele comeu de fato (calorias, proteína, trocas, saciedade, peso em jejum e feedbacks), no perfil e no que deu certo ou errado nas últimas semanas, respeitando as preferências do perfil (por exemplo, itens que ele não quer mexer). Ajuste as metas pelo resultado real quando houver pesagens. Considere os dias de musculação e jiujitsu da semana. Cada refeição tem nome, hora, kcal e proteína estimadas, itens com quantidades (um por item, em gramas ou medidas caseiras) e, se útil, uma orientação com trocas permitidas; refeições opcionais (pré-treino, margem do doce) marcadas como opcional. No campo resposta, explique em português, em texto simples e curto (até umas 8 linhas), o que mudou em relação à semana anterior e por quê. Você não é nutricionista: não prescreva nada fora do que já está no perfil quando houver restrição médica."
+};
+function pcPedir(k,msg){
+  var P=pc[k];if(P.busy||!sampleFn||coachOff)return;
+  var atual=k==="t"?pcTreinoJson(plano.dias):pcDietaJson(dplano.dias),vazio=k==="t"?!planoTemAlgo():!dPlanoTem();
+  if(msg){P.chat.push({r:"u",t:msg});P.draft=""}
+  var hist=P.chat.slice(-12,msg?-1:undefined).map(function(m){return(m.r==="u"?"USUÁRIO: ":"COACH: ")+m.t}).join("\n");
+  var prompt=PC_REGRAS[k]+"\n\n"+pcContexto(k)+"\n\nPLANO QUE ESTÁ NO EDITOR AGORA"+(vazio?" (vazio)":"")+":\n"+JSON.stringify(atual)+(hist?"\n\nCONVERSA ATÉ AQUI:\n"+hist:"")+
+    (msg?"\n\nPEDIDO DO USUÁRIO AGORA: "+msg+"\nAplique o pedido ao plano do editor e devolva o plano completo atualizado. Se for só uma pergunta, responda e devolve \"plano\": null.":"\n\nTAREFA: monte o planejamento completo da semana a planejar, do zero, a partir do histórico.")+
+    "\n\nResponda APENAS com um objeto JSON neste formato (todos os sete dias, seg a dom):\n"+PC_FORMATO[k];
+  P.busy=true;P.err="";P.ctl=new AbortController();P.semana=pcSemana(k);render();
+  sampleFn.json(prompt,{signal:P.ctl.signal}).then(function(v){
+    if(v&&v.plano&&typeof v.plano==="object"){
+      P.antes=clone(k==="t"?plano.dias:dplano.dias);
+      if(k==="t"){plano=normPlano({dias:pcTreinoDeJson(v.plano)});touch("plano")}else{dplano=dNormPlano({dias:pcDietaDeJson(v.plano)});touch("dplano")}
+    }
+    P.chat.push({r:"a",t:String((v&&v.resposta)||"Plano atualizado no editor abaixo.")});
+  },function(e){
+    var c=(e&&e.code)||"upstream_error";
+    if(c==="not_granted"||c==="sampling_disabled"||c==="not_declared"||c==="capability_disabled"||c==="capability_removed")coachOff=true;
+    else if(c!=="cancelled")P.err=c==="invalid_json"?"O coach respondeu num formato que não deu para ler. Toque de novo para tentar.":(COACH_ERRO[c]||"O planejamento falhou no caminho. Tente de novo.");
+  }).then(function(){P.busy=false;P.ctl=null;maybeRender()});
+}
+function renderCoachPlano(k){
+  var P=pc[k];if(P.semana&&P.semana!==pcSemana(k)&&!P.busy){P.chat=[];P.antes=null;P.err="";P.semana=null}
+  var h='<div class="panel pc-painel"><div class="blk"><p class="eyebrow">Planejamento com o coach</p><p class="hint">O coach monta '+(k==="t"?"o treino":"o plano alimentar")+' da semana de '+esc(pcRot(k))+' com base no seu histórico, no seu perfil e no que deu certo ou errado nas últimas semanas. O resultado entra no editor abaixo; você pede ajustes aqui e, quando estiver bom, toca em “Salvar plano da semana” no final.</p></div>';
+  if(coachOff||!sampleFn)return h+'<p class="hint">O coach não está disponível agora. Verifique a conexão e entre de novo.</p></div>';
+  if(P.chat.length||P.busy){
+    h+='<div class="chat">'+P.chat.map(function(m){return'<div class="msg '+(m.r==="u"?"u":"a")+'">'+esc(m.t)+'</div>'}).join("");
+    if(P.busy)h+='<div class="msg a">O coach está '+(P.chat.length&&P.chat[P.chat.length-1].r==="u"?"ajustando":"montando")+' o plano… pode levar um ou dois minutos.</div>';
+    h+='</div>';
+  }
+  if(P.err)h+='<p class="hint" style="color:var(--bad)">'+esc(P.err)+'</p>';
+  if(P.busy)return h+'<div class="acts"><button class="btn" data-act="pc-stop" data-a="'+k+'">Parar</button></div></div>';
+  if(!P.chat.length)return h+'<div class="acts"><button class="btn pri big" data-act="pc-gerar" data-a="'+k+'">'+esc(pcBotao(k))+'</button></div>'+((k==="t"?planoTemAlgo():dPlanoTem())?'<p class="hint">O que estiver no editor agora será substituído pela proposta do coach. Dá para desfazer depois.</p>':"")+'</div>';
+  h+='<label class="f"><span>Pedir ajuste ao coach</span><textarea class="mini" id="pc-in-'+k+'" data-pc="'+k+'" placeholder="'+(k==="t"?"ex.: troque o Nordic por mesa flexora; quero o treino de quarta mais curto":"ex.: quero mais carboidrato no café; troque o lanche da tarde por algo sem pão")+'">'+esc(P.draft)+'</textarea></label>';
+  h+='<div class="acts"><button class="btn pri" data-act="pc-env" data-a="'+k+'">Enviar</button>'+(P.antes?'<button class="btn" data-act="pc-undo" data-a="'+k+'">Desfazer última mudança</button>':"")+'<button class="btn ghost sm" data-act="pc-gerar" data-a="'+k+'">Refazer do zero</button></div>';
+  return h+'</div>';
+}
+function pcClick(a,b){
+  var k=b.dataset.a,P=pc[k];if(!P)return;
+  if(a==="pc-gerar"){P.chat=[];pcPedir(k,null);return}
+  if(a==="pc-env"){var m=(P.draft||"").trim();if(m)pcPedir(k,m);return}
+  if(a==="pc-stop"){if(P.ctl)P.ctl.abort();return}
+  if(a==="pc-undo"&&P.antes){if(k==="t"){plano=normPlano({dias:P.antes});touch("plano")}else{dplano=dNormPlano({dias:P.antes});touch("dplano")}P.antes=null;P.chat.push({r:"a",t:"Voltei o editor para o plano anterior."})}
+  render();
+}
+
 function render(){
   needsRender=false;
   if(window.__tdjConta)setTimeout(window.__tdjConta.depois,0);
@@ -1695,6 +1792,7 @@ function render(){
 document.addEventListener("click",function(ev){
   var b=ev.target.closest("[data-act]");if(!b)return;
   var a=b.dataset.act,i=+b.dataset.i,j=+b.dataset.j,s;
+  if(a.indexOf("pc-")===0){pcClick(a,b);return}
   if(a==="sair"){if(window.__sair)window.__sair();return}
   if(a.indexOf("d-")===0){dClick(a,b);return}
   if(a.indexOf("j-")===0){jClick(a,b);return}
@@ -1756,6 +1854,7 @@ function pararRelogio(s){if(s.inicio){s.min=Math.max(1,Math.round((Date.now()-s.
 
 app.addEventListener("input",function(ev){
   var t=ev.target,d=t.dataset,v=t.value;
+  if(d.pc){pc[d.pc].draft=v;return}
   if(d.dd){dInput(t);return}
   if(d.jj){jInput(t);return}
   if(d.sono){var sd=sonoDoc();sd[d.sono]=v;touch("n:"+sonoDia);needsRender=true;var sr=document.getElementById("sono-res");if(sr)sr.textContent=sonoResumo(sd);return}

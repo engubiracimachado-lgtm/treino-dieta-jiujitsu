@@ -75,6 +75,8 @@ Deno.serve(async (req: Request) => {
   const stream = new ReadableStream({
     async start(controller) {
       const send = (o: unknown) => controller.enqueue(enc.encode(JSON.stringify(o) + "\n"));
+      // Enquanto o modelo pensa não sai texto; um sinal a cada 10 s mantém a conexão aberta.
+      const ping = setInterval(() => { try { send({ p: 1 }); } catch { /* conexão já fechada */ } }, 10000);
       try {
         const s = client.beta.messages.stream(
           {
@@ -99,6 +101,7 @@ Deno.serve(async (req: Request) => {
           send({ error: codigoDoErro(e) });
         }
       } finally {
+        clearInterval(ping);
         controller.close();
       }
     },
