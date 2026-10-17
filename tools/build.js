@@ -24,6 +24,10 @@ rep(`'<button class="area" data-act="area" data-a="jiu">`, `'<button class="area
 rep(`</span></button></div>'+renderSono();`, `</span></button></div>'+renderSono()+'<div class="acts"><span class="hint">Conectado como '+esc(window.__email||"")+'</span><button class="btn ghost sm" data-act="sair">Sair da conta</button></div>';`);
 rep('  if(a.indexOf("d-")===0){dClick(a,b);return}', '  if(a==="sair"){if(window.__sair)window.__sair();return}\n  if(a.indexOf("d-")===0){dClick(a,b);return}');
 
+// nome comercial: TDJ
+rep('<h1 id="marca">Treino, Dieta e Jiujitsu</h1>', '<h1 id="marca">TDJ</h1>');
+rep('area==="jiu"?"Jiujitsu":"Treino, Dieta e Jiujitsu"', 'area==="jiu"?"Jiujitsu":"TDJ"');
+
 // logo no cabeçalho
 rep('<div class="marca"><button class="btn sm" id="voltar"', '<div class="marca"><img class="marca-logo" src="icons/logo.png" alt="" width="32" height="32"><button class="btn sm" id="voltar"');
 
@@ -42,13 +46,13 @@ const head = `<!doctype html>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Treino e Dieta">
+<meta name="apple-mobile-web-app-title" content="TDJ">
 <style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="backend.js"></script>
 </head>
 <body>
 `;
-s = head + s.replace("<title>Diário de Treino</title>", "<title>Treino, Dieta e Jiujitsu</title>") + "\n</body>\n</html>\n";
+s = head + s.replace("<title>Diário de Treino</title>", "<title>TDJ</title>") + "\n</body>\n</html>\n";
 fs.writeFileSync(path.join(__dirname, "..", "index.html"), s);
 console.log("index.html gerado", Math.round(s.length / 1024) + " KB");

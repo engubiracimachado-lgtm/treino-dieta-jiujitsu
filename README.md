@@ -1,4 +1,4 @@
-# Treino, Dieta e Jiujitsu
+# TDJ — Treino, Dieta e Jiujitsu
 
 App pessoal (PWA instalável) para planejar e registrar treinos de musculação, dieta, sono e jiujitsu, com coach por IA.
 

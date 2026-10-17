@@ -10,13 +10,13 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Treino e Dieta">
+<meta name="apple-mobile-web-app-title" content="TDJ">
 <style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="backend.js"></script>
 </head>
 <body>
-<title>Treino, Dieta e Jiujitsu</title>
+<title>TDJ</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
 <style>
 /* Layout: coluna única de caderno de treino; faixa da semana no topo, o dia escolhido embaixo. */
@@ -225,7 +225,7 @@ section{display:flex;flex-direction:column;gap:10px}
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <div class="marca"><img class="marca-logo" src="icons/logo.png" alt="" width="32" height="32"><button class="btn sm" id="voltar" data-act="area" data-a="home" hidden>‹ Início</button><h1 id="marca">Treino, Dieta e Jiujitsu</h1></div>
+      <div class="marca"><img class="marca-logo" src="icons/logo.png" alt="" width="32" height="32"><button class="btn sm" id="voltar" data-act="area" data-a="home" hidden>‹ Início</button><h1 id="marca">TDJ</h1></div>
       <div class="status" id="status" role="status"><i></i><span>Conectando…</span></div>
     </div>
     <nav class="tabs" role="tablist" id="tabs" hidden>
@@ -1673,7 +1673,7 @@ function render(){
   needsRender=false;
   document.getElementById("tabs").hidden=area!=="treino";
   document.getElementById("voltar").hidden=area==="home";
-  document.getElementById("marca").textContent=area==="treino"?"Diário de Treino":area==="dieta"?"Dieta":area==="jiu"?"Jiujitsu":"Treino, Dieta e Jiujitsu";
+  document.getElementById("marca").textContent=area==="treino"?"Diário de Treino":area==="dieta"?"Dieta":area==="jiu"?"Jiujitsu":"TDJ";
   document.getElementById("dtabs").hidden=area!=="dieta";
   document.getElementById("jtabs").hidden=area!=="jiu";
   if(area!=="treino"){app.innerHTML=area==="dieta"?renderDietaArea():area==="jiu"?renderJiuArea():renderHome();setStatus();return}
