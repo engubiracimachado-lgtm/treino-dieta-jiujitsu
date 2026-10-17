@@ -1,0 +1,26 @@
+name: Publicar função do coach no Supabase
+
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/functions/**"]
+  workflow_dispatch:
+
+jobs:
+  funcao:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: nixjsqusdvrdgtupdief
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sem token configurado
+        if: env.SUPABASE_ACCESS_TOKEN == ''
+        run: echo "::notice::Crie o segredo SUPABASE_ACCESS_TOKEN no repositório para publicar a função automaticamente."
+      - uses: supabase/setup-cli@v1
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        with:
+          version: latest
+      - name: Publicar a função coach
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        run: supabase functions deploy coach --project-ref "$PROJECT_REF"

@@ -1,0 +1,35 @@
+name: Publicar app no GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Montar a pasta do site
+        run: |
+          mkdir _site
+          cp -r index.html backend.js sw.js manifest.webmanifest icons _site/
+          sed -i "s/const CACHE = \"tdj-v1\"/const CACHE = \"tdj-${GITHUB_SHA::8}\"/" _site/sw.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
