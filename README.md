@@ -4,6 +4,7 @@ App pessoal (PWA instalável) para planejar e registrar treinos de musculação,
 
 ## Como funciona
 
+- **Endereço**: https://tdj.gestorpessoal.api.br (domínio próprio no GitHub Pages; DNS no Cloudflare, registro CNAME `tdj` → `engubiracimachado-lgtm.github.io`, sem proxy).
 - **Site estático** (`index.html`, `backend.js`, `sw.js`, `manifest.webmanifest`, `icons/`), publicado no GitHub Pages a cada envio para a branch `main` (`.github/workflows/deploy.yml`).
 - **Dados** no Supabase: tabela `public.docs` com um documento JSON por coleção e id, protegida por RLS (cada usuário só lê e grava os próprios dados). Migração em `supabase/migrations/`.
 - **Login** por e-mail e senha (Supabase Auth).
@@ -13,7 +14,7 @@ App pessoal (PWA instalável) para planejar e registrar treinos de musculação,
 ## Configuração única
 
 1. Supabase → Edge Functions → Secrets: criar `ANTHROPIC_API_KEY` com uma chave de console.anthropic.com.
-2. Supabase → Authentication → URL Configuration: em **Site URL** e **Redirect URLs**, colocar o endereço do GitHub Pages.
+2. Supabase → Authentication → URL Configuration: em **Site URL** e **Redirect URLs**, colocar https://tdj.gestorpessoal.api.br/
 3. (Opcional) GitHub → Settings → Secrets → Actions: `SUPABASE_ACCESS_TOKEN` para publicar a função do coach automaticamente (`.github/workflows/supabase.yml`).
 
 ## Desenvolvimento
