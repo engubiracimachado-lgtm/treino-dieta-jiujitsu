@@ -14,7 +14,9 @@
 <style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <script>try{var t=localStorage.getItem("tdj-tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="conta.css">
 <script src="backend.js"></script>
+<script src="conta.js"></script>
 </head>
 <body>
 <title>TDJ</title>
@@ -231,7 +233,7 @@ section{display:flex;flex-direction:column;gap:10px}
   <header class="top">
     <div class="brand">
       <div class="marca"><img class="marca-logo" src="icons/logo.png" alt="" width="32" height="32"><button class="btn sm" id="voltar" data-act="area" data-a="home" hidden>‹ Início</button><h1 id="marca">TDJ</h1></div>
-      <div class="brand-dir"><button class="tema-btn" type="button" data-tema-btn aria-label="Trocar entre modo claro e escuro"></button><div class="status" id="status" role="status"><i></i><span>Conectando…</span></div></div>
+      <div class="brand-dir"><div class="status" id="status" role="status"><i></i><span>Conectando…</span></div><div class="topo-conta" id="topo-conta" hidden></div></div>
     </div>
     <nav class="tabs" role="tablist" id="tabs" hidden>
       <button role="tab" data-act="tab" data-t="hoje">Treino</button>
@@ -1676,12 +1678,13 @@ try{var jj0=JSON.parse(localStorage.getItem(LS)||"null");if(jj0){jperfil=jNormPe
 
 function render(){
   needsRender=false;
+  if(window.__tdjConta)setTimeout(window.__tdjConta.depois,0);
   document.getElementById("tabs").hidden=area!=="treino";
   document.getElementById("voltar").hidden=area==="home";
-  document.getElementById("marca").textContent=area==="treino"?"Diário de Treino":area==="dieta"?"Dieta":area==="jiu"?"Jiujitsu":"TDJ";
+  document.getElementById("marca").textContent=area==="treino"?"Diário de Treino":area==="dieta"?"Dieta":area==="jiu"?"Jiujitsu":area==="conta"?"Configurações":"TDJ";
   document.getElementById("dtabs").hidden=area!=="dieta";
   document.getElementById("jtabs").hidden=area!=="jiu";
-  if(area!=="treino"){app.innerHTML=area==="dieta"?renderDietaArea():area==="jiu"?renderJiuArea():renderHome();setStatus();return}
+  if(area!=="treino"){app.innerHTML=area==="dieta"?renderDietaArea():area==="jiu"?renderJiuArea():area==="conta"&&window.__tdjConta?window.__tdjConta.html():renderHome();setStatus();return}
   Array.prototype.forEach.call(document.querySelectorAll("#tabs button"),function(b){b.setAttribute("aria-selected",b.dataset.t===tab)});
   app.innerHTML=tab==="plano"?renderPlano():tab==="hist"?renderHist():tab==="perfil"?renderPerfil():renderHoje();
   setStatus();
@@ -1778,6 +1781,7 @@ setInterval(function(){
 window.addEventListener("pagehide",function(){if(mode==="local"&&dirty.size){dirty.clear();saveLocal()}});
 
 render();
+window.__tdjApp={dados:function(){return{plano:plano,semanas:semanas,sessoes:sessoes,sono:sono,dsem:dsem,ddias:ddias,jtreinos:jtreinos,jnotas:jnotas,jaulas:jaulas}},ir:function(o){if(o.area)area=o.area;if(o.tab)tab=o.tab;if(o.sel)sel=o.sel;if(o.dtab)dtab=o.dtab;if(o.dsel)dsel=o.dsel;if(o.jtab)jtab=o.jtab;if("jsel" in o)jsel=o.jsel;if("jnsel" in o)jnsel=o.jnsel;if("jasel" in o)jasel=o.jasel;if(o.pw){pw=o.pw;editW=null}if(o.dpw){dpw=o.dpw;deditW=null}window.scrollTo(0,0);render()},render:function(){render()}};
 if(window.claude&&window.claude.use)window.claude.use("sample").then(function(fn){if(fn){sampleFn=fn;maybeRender();try{fn.limits().then(function(l){dFotoOk=!!(l&&l.images);maybeRender()},function(){})}catch(e){}}},function(){});
 var boot=window.claude&&window.claude.use?window.claude.use("db"):Promise.resolve(null);
 boot.then(function(d){if(d)startDb(d);else{mode="local";flushAll()}},function(){mode="local";flushAll()});

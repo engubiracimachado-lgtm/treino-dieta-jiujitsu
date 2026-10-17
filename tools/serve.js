@@ -1,7 +1,7 @@
 // Servidor local para testar o app: node tools/serve.js (abre em http://localhost:5173)
 const http = require("http"), fs = require("fs"), path = require("path");
 const raiz = path.join(__dirname, ".."), porta = +process.env.PORT || 5173;
-const tipos = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".webmanifest": "application/manifest+json", ".png": "image/png", ".json": "application/json" };
+const tipos = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".webmanifest": "application/manifest+json", ".png": "image/png", ".json": "application/json" };
 http.createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, "http://x").pathname);
   if (p.endsWith("/")) p += "index.html";

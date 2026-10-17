@@ -5,6 +5,7 @@
   var SUPABASE_URL = "https://nixjsqusdvrdgtupdief.supabase.co";
   var SUPABASE_KEY = "sb_publishable_1A5FzY-23QRf_bgkF1GGAg_V3MaFkRq";
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+  window.__tdjSb = sb;
   var uid = null, pronto, liberar;
   pronto = new Promise(function (r) { liberar = r; });
 
@@ -42,6 +43,7 @@
     pintaTema();
   });
   if (escuroSistema && escuroSistema.addEventListener) escuroSistema.addEventListener("change", pintaTema);
+  window.__tdjPintaTema = pintaTema;
   document.addEventListener("DOMContentLoaded", pintaTema);
 
   /* ---------------- login ---------------- */
@@ -50,25 +52,27 @@
   function telaLogin(msg, tipo) {
     var tela = document.getElementById("login");
     if (!tela) { tela = el('<div id="login" class="login"></div>'); document.body.appendChild(tela); }
-    var criar = modo === "criar", recup = modo === "recuperar", nova = modo === "nova";
+    var criar = modo === "criar", recup = modo === "recuperar", nova = modo === "nova", codigo = modo === "codigo";
     tela.innerHTML =
       '<form class="login-box" id="login-form" novalidate>' +
       '<div class="login-topo"><button class="tema-btn" type="button" data-tema-btn aria-label="Trocar entre modo claro e escuro"></button></div>' +
       '<img class="login-logo" src="icons/logo.png" alt="Logo do app" width="72" height="72">' +
       '<p class="eyebrow">TDJ · Treino, Dieta e Jiujitsu</p>' +
-      '<h2>' + (criar ? "Criar conta" : recup ? "Recuperar senha" : nova ? "Nova senha" : "Entrar") + '</h2>' +
-      (nova ? "" : '<label class="f"><span>E-mail</span><input type="email" id="login-email" autocomplete="email" required></label>') +
-      (recup ? "" : '<label class="f"><span>' + (nova ? "Nova senha" : "Senha") + '</span><input type="password" id="login-senha" autocomplete="' + (criar || nova ? "new-password" : "current-password") + '" minlength="8" required></label>') +
+      '<h2>' + (criar ? "Criar conta" : recup ? "Recuperar senha" : nova ? "Nova senha" : codigo ? "Verificação" : "Entrar") + '</h2>' +
+      (codigo ? '<p class="hint">Digite o código de 6 dígitos do seu app autenticador.</p><label class="f"><span>Código</span><input type="text" id="login-codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" required></label>' : "") +
+      (nova || codigo ? "" : '<label class="f"><span>E-mail</span><input type="email" id="login-email" autocomplete="email" required></label>') +
+      (recup || codigo ? "" : '<label class="f"><span>' + (nova ? "Nova senha" : "Senha") + '</span><input type="password" id="login-senha" autocomplete="' + (criar || nova ? "new-password" : "current-password") + '" minlength="8" required></label>') +
       (criar ? '<p class="hint">Use pelo menos 8 caracteres.</p>' : "") +
       (msg ? '<p class="hint" style="color:' + (tipo === "ok" ? "var(--good)" : "var(--bad)") + '">' + msg + '</p>' : "") +
-      '<button class="btn pri big" type="submit" id="login-ok">' + (criar ? "Criar conta" : recup ? "Enviar link por e-mail" : nova ? "Salvar nova senha" : "Entrar") + '</button>' +
+      '<button class="btn pri big" type="submit" id="login-ok">' + (criar ? "Criar conta" : recup ? "Enviar link por e-mail" : nova ? "Salvar nova senha" : codigo ? "Confirmar" : "Entrar") + '</button>' +
       '<div class="acts">' +
       (modo === "entrar" ? '<button class="btn ghost sm" type="button" data-modo="criar">Criar conta</button><button class="btn ghost sm" type="button" data-modo="recuperar">Esqueci a senha</button>' : "") +
       (criar || recup ? '<button class="btn ghost sm" type="button" data-modo="entrar">Já tenho conta</button>' : "") +
+      (codigo ? '<button class="btn ghost sm" type="button" data-modo="sair">Entrar com outra conta</button>' : "") +
       '</div></form>';
     tela.hidden = false;
     document.querySelector(".wrap").hidden = true;
-    tela.querySelectorAll("[data-modo]").forEach(function (b) { b.onclick = function () { modo = b.dataset.modo; telaLogin(); }; });
+    tela.querySelectorAll("[data-modo]").forEach(function (b) { b.onclick = function () { if (b.dataset.modo === "sair") { sb.auth.signOut(); return; } modo = b.dataset.modo; telaLogin(); }; });
     tela.querySelector("form").onsubmit = enviarLogin;
     pintaTema();
     var f = tela.querySelector("input"); if (f) f.focus();
@@ -81,6 +85,7 @@
     if (/Password should be|at least/i.test(m)) return "A senha precisa ter pelo menos 8 caracteres.";
     if (/rate limit|too many/i.test(m)) return "Muitas tentativas. Espere alguns minutos e tente de novo.";
     if (/fetch|network/i.test(m)) return "Sem conexão com o servidor. Verifique a internet.";
+    if (/TOTP|invalid.*code|code.*invalid|expired/i.test(m)) return "Código inválido ou vencido. Digite o código que aparece agora no app autenticador.";
     return "Não foi possível concluir: " + m;
   }
   async function enviarLogin(ev) {
@@ -97,6 +102,15 @@
         r = await sb.auth.resetPasswordForEmail(email, { redirectTo: volta });
         if (r.error) throw r.error;
         modo = "entrar"; telaLogin("Se houver conta com esse e-mail, chegou um link para criar uma nova senha.", "ok"); return;
+      } else if (modo === "codigo") {
+        var cod = ((document.getElementById("login-codigo") || {}).value || "").replace(/\D/g, "");
+        if (cod.length !== 6) throw new Error("invalid code");
+        var lf = await sb.auth.mfa.listFactors();
+        var fa = lf.data && (lf.data.totp || []).filter(function (x) { return x.status === "verified"; })[0];
+        if (!fa) { modo = "entrar"; var s0 = await sb.auth.getSession(); entrou(s0.data.session && s0.data.session.user); return; }
+        r = await sb.auth.mfa.challengeAndVerify({ factorId: fa.id, code: cod });
+        if (r.error) throw r.error;
+        modo = "entrar"; var s1 = await sb.auth.getSession(); entrou(s1.data.session.user); return;
       } else if (modo === "nova") {
         r = await sb.auth.updateUser({ password: senha });
         if (r.error) throw r.error;
@@ -110,10 +124,22 @@
   }
   function entrou(user) {
     if (!user || uid === user.id) return;
-    uid = user.id; window.__email = user.email || "";
+    uid = user.id; window.__email = user.email || ""; window.__tdjUser = user;
     var tela = document.getElementById("login"); if (tela) tela.hidden = true;
     document.querySelector(".wrap").hidden = false;
     liberar();
+    document.dispatchEvent(new Event("tdj:login"));
+  }
+  /* Antes de abrir o app, confere se a conta tem 2FA e se o código já foi confirmado nesta sessão. */
+  var conferindo = false;
+  async function tentaEntrar(sessao) {
+    if (!sessao || !sessao.user || modo === "nova" || uid === sessao.user.id || conferindo) return;
+    conferindo = true;
+    try {
+      var a = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (a.data && a.data.nextLevel === "aal2" && a.data.currentLevel !== "aal2") { modo = "codigo"; telaLogin(); return; }
+    } catch (e) {} finally { conferindo = false; }
+    entrou(sessao.user);
   }
   window.__sair = function () { sb.auth.signOut().finally(function () { try { localStorage.removeItem("diario-treino-v1"); } catch (e) {} location.reload(); }); };
 
@@ -121,11 +147,12 @@
     document.querySelector(".wrap").hidden = true;
     sb.auth.onAuthStateChange(function (evento, sessao) {
       if (evento === "PASSWORD_RECOVERY") { modo = "nova"; telaLogin(); return; }
-      if (sessao && sessao.user && modo !== "nova") entrou(sessao.user);
+      if (evento === "USER_UPDATED" && sessao && sessao.user && uid === sessao.user.id) window.__tdjUser = sessao.user;
+      if (sessao && sessao.user && modo !== "nova" && modo !== "codigo") setTimeout(function () { tentaEntrar(sessao); }, 0);
       if (evento === "SIGNED_OUT") location.reload();
     });
     var s = await sb.auth.getSession();
-    if (s.data.session && modo !== "nova") entrou(s.data.session.user); else if (modo !== "nova") telaLogin();
+    if (s.data.session && modo !== "nova") tentaEntrar(s.data.session); else if (modo !== "nova") telaLogin();
   });
 
   /* ---------------- banco: documentos por coleção ---------------- */

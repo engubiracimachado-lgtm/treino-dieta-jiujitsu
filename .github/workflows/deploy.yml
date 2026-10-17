@@ -25,7 +25,7 @@ jobs:
       - name: Montar a pasta do site
         run: |
           mkdir _site
-          cp -r index.html backend.js sw.js manifest.webmanifest icons _site/
+          cp -r index.html backend.js conta.js conta.css sw.js manifest.webmanifest icons _site/
           sed -i "s/const CACHE = \"tdj-v1\"/const CACHE = \"tdj-${GITHUB_SHA::8}\"/" _site/sw.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

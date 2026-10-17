@@ -7,7 +7,8 @@ App pessoal (PWA instalável) para planejar e registrar treinos de musculação,
 - **Endereço**: https://tdj.gestorpessoal.api.br (domínio próprio no GitHub Pages; DNS no Cloudflare, registro CNAME `tdj` → `engubiracimachado-lgtm.github.io`, sem proxy).
 - **Site estático** (`index.html`, `backend.js`, `sw.js`, `manifest.webmanifest`, `icons/`), publicado no GitHub Pages a cada envio para a branch `main` (`.github/workflows/deploy.yml`).
 - **Dados** no Supabase: tabela `public.docs` com um documento JSON por coleção e id, protegida por RLS (cada usuário só lê e grava os próprios dados). Migração em `supabase/migrations/`.
-- **Login** por e-mail e senha (Supabase Auth).
+- **Login** por e-mail e senha (Supabase Auth), com 2FA opcional por app autenticador; com o 2FA ativo, a RLS exige sessão `aal2`.
+- **Topo e configurações** (`conta.js`, `conta.css`): pesquisa nos dados do app, lembretes do dia no sino e a página de Configurações pessoais (nome, senha, 2FA, aparência e quais lembretes aparecem).
 - **IA**: a Edge Function `supabase/functions/coach` chama o Claude (`claude-opus-5-5`) com a chave do segredo `ANTHROPIC_API_KEY`. Só aceita usuários logados.
 - **Offline**: service worker *network-first*; sem internet, abre a última versão salva (os dados precisam de conexão).
 

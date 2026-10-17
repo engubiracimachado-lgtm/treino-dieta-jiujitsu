@@ -26,10 +26,14 @@ rep('  if(a.indexOf("d-")===0){dClick(a,b);return}', '  if(a==="sair"){if(window
 
 // nome comercial: TDJ
 rep('<h1 id="marca">Treino, Dieta e Jiujitsu</h1>', '<h1 id="marca">TDJ</h1>');
-rep('area==="jiu"?"Jiujitsu":"Treino, Dieta e Jiujitsu"', 'area==="jiu"?"Jiujitsu":"TDJ"');
+rep('area==="jiu"?"Jiujitsu":"Treino, Dieta e Jiujitsu"', 'area==="jiu"?"Jiujitsu":area==="conta"?"Configurações":"TDJ"');
+// configurações pessoais e topo (conta.js): a área "conta" e os ganchos de dados e navegação
+rep('app.innerHTML=area==="dieta"?renderDietaArea():area==="jiu"?renderJiuArea():renderHome();setStatus();return}', 'app.innerHTML=area==="dieta"?renderDietaArea():area==="jiu"?renderJiuArea():area==="conta"&&window.__tdjConta?window.__tdjConta.html():renderHome();setStatus();return}');
+rep('function render(){\n  needsRender=false;', 'function render(){\n  needsRender=false;\n  if(window.__tdjConta)setTimeout(window.__tdjConta.depois,0);');
+rep('if(window.claude&&window.claude.use)window.claude.use("sample")', 'window.__tdjApp={dados:function(){return{plano:plano,semanas:semanas,sessoes:sessoes,sono:sono,dsem:dsem,ddias:ddias,jtreinos:jtreinos,jnotas:jnotas,jaulas:jaulas}},ir:function(o){if(o.area)area=o.area;if(o.tab)tab=o.tab;if(o.sel)sel=o.sel;if(o.dtab)dtab=o.dtab;if(o.dsel)dsel=o.dsel;if(o.jtab)jtab=o.jtab;if("jsel" in o)jsel=o.jsel;if("jnsel" in o)jnsel=o.jnsel;if("jasel" in o)jasel=o.jasel;if(o.pw){pw=o.pw;editW=null}if(o.dpw){dpw=o.dpw;deditW=null}window.scrollTo(0,0);render()},render:function(){render()}};\nif(window.claude&&window.claude.use)window.claude.use("sample")');
 
 // botão de modo claro/escuro no cabeçalho
-rep('<div class="status" id="status" role="status"><i></i><span>Conectando…</span></div>', '<div class="brand-dir"><button class="tema-btn" type="button" data-tema-btn aria-label="Trocar entre modo claro e escuro"></button><div class="status" id="status" role="status"><i></i><span>Conectando…</span></div></div>');
+rep('<div class="status" id="status" role="status"><i></i><span>Conectando…</span></div>', '<div class="brand-dir"><div class="status" id="status" role="status"><i></i><span>Conectando…</span></div><div class="topo-conta" id="topo-conta" hidden></div></div>');
 rep('.brand{display:flex;align-items:baseline;', '.brand-dir{display:flex;align-items:center;gap:10px}\n.tema-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}\n.tema-btn svg{width:16px;height:16px;flex:none}\n.brand{display:flex;align-items:center;');
 
 // logo no cabeçalho
@@ -54,7 +58,9 @@ const head = `<!doctype html>
 <style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <script>try{var t=localStorage.getItem("tdj-tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="conta.css">
 <script src="backend.js"></script>
+<script src="conta.js"></script>
 </head>
 <body>
 `;
