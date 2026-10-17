@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="TDJ">
 <style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<script>try{var t=localStorage.getItem("tdj-tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="backend.js"></script>
 </head>
@@ -51,7 +52,10 @@ button{cursor:pointer}
 .wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:0 56px}
 
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand-dir{display:flex;align-items:center;gap:10px}
+.tema-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.tema-btn svg{width:16px;height:16px;flex:none}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .marca{display:flex;align-items:center;gap:10px;min-width:0}
 .areas{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
 .area{display:flex;flex-direction:column;gap:10px;align-items:flex-start;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 20px;min-height:220px}
@@ -185,6 +189,7 @@ input[type=date]{width:100%;background:var(--bg);border:1px solid var(--line);bo
 .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
 .login-box{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px 20px;display:flex;flex-direction:column;gap:14px}
 .marca-logo{width:32px;height:32px;border-radius:7px;flex:none}
+.login-topo{display:flex;justify-content:flex-end;margin-bottom:-8px}
 .login-logo{width:72px;height:72px;border-radius:16px;align-self:center}
 .login-box h2{font-family:var(--display);font-weight:700;font-size:34px;text-transform:uppercase;margin:0;line-height:1}
 input[type=email],input[type=password]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:16px}
@@ -226,7 +231,7 @@ section{display:flex;flex-direction:column;gap:10px}
   <header class="top">
     <div class="brand">
       <div class="marca"><img class="marca-logo" src="icons/logo.png" alt="" width="32" height="32"><button class="btn sm" id="voltar" data-act="area" data-a="home" hidden>‹ Início</button><h1 id="marca">TDJ</h1></div>
-      <div class="status" id="status" role="status"><i></i><span>Conectando…</span></div>
+      <div class="brand-dir"><button class="tema-btn" type="button" data-tema-btn aria-label="Trocar entre modo claro e escuro"></button><div class="status" id="status" role="status"><i></i><span>Conectando…</span></div></div>
     </div>
     <nav class="tabs" role="tablist" id="tabs" hidden>
       <button role="tab" data-act="tab" data-t="hoje">Treino</button>

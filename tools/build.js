@@ -28,11 +28,15 @@ rep('  if(a.indexOf("d-")===0){dClick(a,b);return}', '  if(a==="sair"){if(window
 rep('<h1 id="marca">Treino, Dieta e Jiujitsu</h1>', '<h1 id="marca">TDJ</h1>');
 rep('area==="jiu"?"Jiujitsu":"Treino, Dieta e Jiujitsu"', 'area==="jiu"?"Jiujitsu":"TDJ"');
 
+// botão de modo claro/escuro no cabeçalho
+rep('<div class="status" id="status" role="status"><i></i><span>Conectando…</span></div>', '<div class="brand-dir"><button class="tema-btn" type="button" data-tema-btn aria-label="Trocar entre modo claro e escuro"></button><div class="status" id="status" role="status"><i></i><span>Conectando…</span></div></div>');
+rep('.brand{display:flex;align-items:baseline;', '.brand-dir{display:flex;align-items:center;gap:10px}\n.tema-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}\n.tema-btn svg{width:16px;height:16px;flex:none}\n.brand{display:flex;align-items:center;');
+
 // logo no cabeçalho
 rep('<div class="marca"><button class="btn sm" id="voltar"', '<div class="marca"><img class="marca-logo" src="icons/logo.png" alt="" width="32" height="32"><button class="btn sm" id="voltar"');
 
 // tela de login
-rep('.hint{font-size:14px', '.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}\n.login-box{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px 20px;display:flex;flex-direction:column;gap:14px}\n.marca-logo{width:32px;height:32px;border-radius:7px;flex:none}\n.login-logo{width:72px;height:72px;border-radius:16px;align-self:center}\n.login-box h2{font-family:var(--display);font-weight:700;font-size:34px;text-transform:uppercase;margin:0;line-height:1}\ninput[type=email],input[type=password]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:16px}\n.hint{font-size:14px');
+rep('.hint{font-size:14px', '.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}\n.login-box{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px 20px;display:flex;flex-direction:column;gap:14px}\n.marca-logo{width:32px;height:32px;border-radius:7px;flex:none}\n.login-topo{display:flex;justify-content:flex-end;margin-bottom:-8px}\n.login-logo{width:72px;height:72px;border-radius:16px;align-self:center}\n.login-box h2{font-family:var(--display);font-weight:700;font-size:34px;text-transform:uppercase;margin:0;line-height:1}\ninput[type=email],input[type=password]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:16px}\n.hint{font-size:14px');
 
 const head = `<!doctype html>
 <html lang="pt-BR">
@@ -48,6 +52,7 @@ const head = `<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="TDJ">
 <style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<script>try{var t=localStorage.getItem("tdj-tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="backend.js"></script>
 </head>
