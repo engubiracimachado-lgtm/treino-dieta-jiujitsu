@@ -21,8 +21,10 @@ self.addEventListener("fetch", (e) => {
   const daCasa = url.origin === self.location.origin;
   const cdn = url.hostname === "cdn.jsdelivr.net" || url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
   if (!daCasa && !cdn) return;
+  // Arquivos do app: pede ao servidor a versão atual (revalida em vez de usar o cache de 10 min do navegador).
+  const pedido = daCasa ? fetch(req.url, { cache: "no-cache", credentials: "same-origin" }) : fetch(req);
   e.respondWith(
-    fetch(req)
+    pedido
       .then((res) => {
         if (res && (res.ok || res.type === "opaque")) {
           const copia = res.clone();

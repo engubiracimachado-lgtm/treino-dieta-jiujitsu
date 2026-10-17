@@ -9,7 +9,16 @@
   pronto = new Promise(function (r) { liberar = r; });
 
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+    var tinhaControle = !!navigator.serviceWorker.controller, recarregou = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!tinhaControle || recarregou) { tinhaControle = true; return; }
+      recarregou = true; location.reload();
+    });
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function (reg) {
+        document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") reg.update().catch(function () {}); });
+      }).catch(function () {});
+    });
   }
 
   /* ---------------- modo claro / escuro ---------------- */
