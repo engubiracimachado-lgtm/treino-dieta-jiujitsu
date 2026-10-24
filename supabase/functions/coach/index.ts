@@ -3,7 +3,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Anthropic from "npm:@anthropic-ai/sdk";
 
-const MODEL = "claude-opus-5-5";
+// Claude Haiku 5.5: escolhido pelo custo (cerca de 40x mais barato que o Opus 5.5).
+const MODEL = "claude-haiku-5-5";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
@@ -78,15 +79,13 @@ Deno.serve(async (req: Request) => {
       // Enquanto o modelo pensa não sai texto; um sinal a cada 10 s mantém a conexão aberta.
       const ping = setInterval(() => { try { send({ p: 1 }); } catch { /* conexão já fechada */ } }, 10000);
       try {
-        const s = client.beta.messages.stream(
+        const s = client.messages.stream(
           {
             model: MODEL,
             max_tokens: 16000,
             output_config: { effort },
             messages,
-            betas: ["server-side-fallback-2026-07-01"],
-            fallbacks: "default",
-          } as unknown as Parameters<typeof client.beta.messages.stream>[0],
+          } as unknown as Parameters<typeof client.messages.stream>[0],
           { signal: req.signal },
         );
         for await (const ev of s) {
